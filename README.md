@@ -1,7 +1,7 @@
-# 🎓 Department Event Management System
+# 🎓 Academic Event Management System
 
 ## 📌 Project Overview
-The **Department Event Management System** is a web-based application developed using the **MERN stack** with **Supabase** to manage and coordinate events conducted within a university department. The system helps streamline the creation, approval, registration, and monitoring of departmental events such as seminars, workshops, technical events, cultural programs, guest lectures, and competitions.
+The **Academic Event Management System** is a web-based application developed using the **MERN stack** with **Supabase** to manage and coordinate events conducted within a university department. The system helps streamline the creation, approval, registration, and monitoring of departmental events such as seminars, workshops, technical events, cultural programs, guest lectures, and competitions.
 
 It provides role-based access for **Admin, Faculty/Department Coordinator, Student Coordinator, and Students**, ensuring efficient collaboration and transparent event management.
 
