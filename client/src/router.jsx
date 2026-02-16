@@ -9,7 +9,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
 import Events from './pages/Events';
-import CoordinatorRequest from './pages/CoordinatorRequest';
 import CoordinatorRequests from './pages/CoordinatorRequests';
 
 const router = createBrowserRouter([
@@ -44,10 +43,6 @@ const router = createBrowserRouter([
             {
                 path: '/admin-dashboard',
                 element: <AdminDashboard />,
-            },
-            {
-                path: '/coordinator-request',
-                element: <CoordinatorRequest />,
             },
             {
                 path: '/coordinator-requests',

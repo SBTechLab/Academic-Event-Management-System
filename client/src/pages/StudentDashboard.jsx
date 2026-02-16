@@ -8,6 +8,8 @@ const StudentDashboard = () => {
     const [registrations, setRegistrations] = useState([]);
     const [coordinatorRequest, setCoordinatorRequest] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [requestLoading, setRequestLoading] = useState(false);
+    const [message, setMessage] = useState('');
 
     useEffect(() => {
         fetchDashboardData();
@@ -49,17 +51,27 @@ const StudentDashboard = () => {
     };
 
     const handleCoordinatorRequest = async () => {
+        setRequestLoading(true);
+        setMessage('');
         try {
             const response = await fetch('http://localhost:5001/api/coordinator-requests', {
                 method: 'POST',
                 headers: getAuthHeaders()
             });
+            
+            const data = await response.json();
+            
             if (response.ok) {
-                const data = await response.json();
                 setCoordinatorRequest(data);
+                setMessage('✅ Coordinator request submitted successfully!');
+            } else {
+                setMessage(`❌ Error: ${data.error || 'Failed to submit request'}`);
             }
         } catch (error) {
             console.error('Error submitting request:', error);
+            setMessage('❌ Network error. Please try again.');
+        } finally {
+            setRequestLoading(false);
         }
     };
 
@@ -95,6 +107,15 @@ const StudentDashboard = () => {
             {/* Coordinator Request Section */}
             <div className="bg-card p-6 rounded-lg shadow-sm border">
                 <h2 className="text-xl font-semibold text-primary mb-4">Become a Coordinator</h2>
+                
+                {message && (
+                    <div className={`p-3 rounded mb-4 ${
+                        message.includes('✅') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                        {message}
+                    </div>
+                )}
+                
                 {!coordinatorRequest ? (
                     <div>
                         <p className="text-text/70 mb-4">
@@ -102,9 +123,10 @@ const StudentDashboard = () => {
                         </p>
                         <button
                             onClick={handleCoordinatorRequest}
-                            className="bg-secondary text-white px-6 py-2 rounded hover:bg-opacity-90"
+                            disabled={requestLoading}
+                            className="bg-secondary text-white px-6 py-2 rounded hover:bg-opacity-90 disabled:opacity-50"
                         >
-                            Apply as Coordinator
+                            {requestLoading ? 'Submitting...' : 'Apply as Coordinator'}
                         </button>
                     </div>
                 ) : (
@@ -129,18 +151,12 @@ const StudentDashboard = () => {
             {/* Quick Actions */}
             <div className="bg-card p-6 rounded-lg shadow-sm border">
                 <h2 className="text-xl font-semibold text-primary mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                     <Link
                         to="/events"
                         className="bg-primary text-white p-4 rounded-lg text-center hover:bg-opacity-90"
                     >
                         Browse Events
-                    </Link>
-                    <Link
-                        to="/coordinator-request"
-                        className="bg-secondary text-white p-4 rounded-lg text-center hover:bg-opacity-90"
-                    >
-                        View Coordinator Status
                     </Link>
                 </div>
             </div>
