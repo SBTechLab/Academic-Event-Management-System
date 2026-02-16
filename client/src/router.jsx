@@ -3,12 +3,14 @@ import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
+import StudentDashboard from './pages/StudentDashboard';
+import FacultyDashboard from './pages/FacultyDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
 import Events from './pages/Events';
-import Profile from './pages/Profile';
-import CoordinatorApplications from './components/CoordinatorApplications';
+import CoordinatorRequest from './pages/CoordinatorRequest';
+import CoordinatorRequests from './pages/CoordinatorRequests';
 
 const router = createBrowserRouter([
     {
@@ -32,16 +34,24 @@ const router = createBrowserRouter([
                 element: <Signup />,
             },
             {
-                path: '/dashboard',
-                element: <Dashboard />,
+                path: '/student-dashboard',
+                element: <StudentDashboard />,
             },
             {
-                path: '/profile',
-                element: <Profile />,
+                path: '/faculty-dashboard',
+                element: <FacultyDashboard />,
             },
             {
-                path: '/coordinator-applications',
-                element: <CoordinatorApplications />,
+                path: '/admin-dashboard',
+                element: <AdminDashboard />,
+            },
+            {
+                path: '/coordinator-request',
+                element: <CoordinatorRequest />,
+            },
+            {
+                path: '/coordinator-requests',
+                element: <CoordinatorRequests />,
             },
             {
                 path: '/events/:id',

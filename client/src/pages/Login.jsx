@@ -16,7 +16,16 @@ const Login = () => {
         setLoading(true);
         try {
             await login(email, password);
-            navigate('/dashboard');
+            const userRole = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).role : 'student';
+            if (userRole === 'admin') {
+                navigate('/admin-dashboard');
+            } else if (userRole === 'faculty') {
+                navigate('/faculty-dashboard');
+            } else if (userRole === 'student_coordinator') {
+                navigate('/student-dashboard');
+            } else {
+                navigate('/student-dashboard');
+            }
         } catch (err) {
             console.error('Login Error:', err);
             setError(err.message || 'Failed to login. Please check your credentials.');

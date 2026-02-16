@@ -1,6 +1,7 @@
 const supabase = require('../config/supabase');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 // Generate JWT
 const generateToken = (id, role) => {
@@ -14,38 +15,33 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Use Supabase Auth to sign in
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-
-        if (authError) {
-            return res.status(401).json({ error: 'Invalid email or password' });
-        }
-
-        if (!authData.user) {
-            return res.status(401).json({ error: 'Invalid email or password' });
-        }
-
-        // Get user role from public.users
-        const { data: userData, error: userError } = await supabase
+        // 1. Find user by email
+        const { data: user, error } = await supabase
             .from('users')
             .select('*, roles(name)')
-            .eq('id', authData.user.id)
+            .eq('email', email)
             .single();
 
-        const role = userData?.roles?.name || 'student';
+        if (error || !user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-        res.json({
-            user: {
-                id: authData.user.id,
-                email: authData.user.email,
-                full_name: userData?.full_name || authData.user.user_metadata?.full_name,
-                role: role,
-            },
-            token: generateToken(authData.user.id, role),
-        });
+        // 2. Check password
+        if (user.password && (await bcrypt.compare(password, user.password))) {
+            const role = user.roles?.name || 'student';
+
+            res.json({
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    full_name: user.full_name,
+                    role: role,
+                },
+                token: generateToken(user.id, role),
+            });
+        } else {
+            res.status(401).json({ error: 'Invalid email or password' });
+        }
     } catch (err) {
         console.error('Login Error:', err);
         res.status(500).json({ error: 'Server error' });
@@ -57,42 +53,49 @@ const registerUser = async (req, res) => {
     const { email, password, full_name } = req.body;
 
     try {
-        // Use Supabase Auth to create user
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: full_name
-                }
-            }
-        });
-
-        if (authError) {
-            return res.status(400).json({ error: authError.message });
+        // Auto-assign role based on email domain
+        let assignedRole = 'student';
+        if (email.endsWith('@charusat.ac.in')) {
+            assignedRole = 'faculty';
+        } else if (email.endsWith('.edu.in')) {
+            assignedRole = 'student';
         }
 
-        if (!authData.user) {
-            return res.status(400).json({ error: 'Failed to create user' });
-        }
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Get user role from public.users (created by trigger)
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*, roles(name)')
-            .eq('id', authData.user.id)
+        // Get role ID
+        const { data: roleData } = await supabase
+            .from('roles')
+            .select('id')
+            .eq('name', assignedRole)
             .single();
 
-        const role = userData?.roles?.name || 'student';
+        // Insert user directly into users table
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .insert({
+                id: crypto.randomUUID(),
+                email,
+                full_name,
+                role_id: roleData?.id,
+                password: hashedPassword
+            })
+            .select()
+            .single();
+
+        if (userError) {
+            return res.status(400).json({ error: userError.message });
+        }
 
         res.status(201).json({
             user: {
-                id: authData.user.id,
-                email: authData.user.email,
-                full_name: full_name,
-                role: role,
+                id: userData.id,
+                email: userData.email,
+                full_name: userData.full_name,
+                role: assignedRole,
             },
-            token: generateToken(authData.user.id, role),
+            token: generateToken(userData.id, assignedRole),
         });
     } catch (err) {
         console.error('Signup Error:', err);
