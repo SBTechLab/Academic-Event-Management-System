@@ -15,7 +15,7 @@ const EventDetails = () => {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/api/events/${id}`);
+                const response = await fetch(`http://localhost:5001/api/events/${id}`);
                 if (!response.ok) throw new Error('Event not found');
                 const data = await response.json();
                 setEvent(data);
@@ -40,7 +40,7 @@ const EventDetails = () => {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/registrations', {
+            const response = await fetch('http://localhost:5001/api/registrations', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ event_id: id })

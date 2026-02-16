@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
 import Events from './pages/Events';
+import Profile from './pages/Profile';
+import CoordinatorApplications from './components/CoordinatorApplications';
 
 const router = createBrowserRouter([
     {
@@ -32,6 +34,14 @@ const router = createBrowserRouter([
             {
                 path: '/dashboard',
                 element: <Dashboard />,
+            },
+            {
+                path: '/profile',
+                element: <Profile />,
+            },
+            {
+                path: '/coordinator-applications',
+                element: <CoordinatorApplications />,
             },
             {
                 path: '/events/:id',

@@ -9,7 +9,7 @@ const Events = () => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/events');
+                const response = await fetch('http://localhost:5001/api/events');
                 if (!response.ok) throw new Error('Failed to fetch events');
                 const data = await response.json();
                 setEvents(data);

@@ -14,33 +14,38 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // 1. Find user by email
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('*, roles(name)')
-            .eq('email', email)
-            .single();
+        // Use Supabase Auth to sign in
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
 
-        if (error || !user) {
+        if (authError) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        // 2. Check password
-        if (user.password && (await bcrypt.compare(password, user.password))) {
-            const role = user.roles?.name || 'student';
-
-            res.json({
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.full_name,
-                    role: role,
-                },
-                token: generateToken(user.id, role),
-            });
-        } else {
-            res.status(401).json({ error: 'Invalid email or password' });
+        if (!authData.user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
         }
+
+        // Get user role from public.users
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*, roles(name)')
+            .eq('id', authData.user.id)
+            .single();
+
+        const role = userData?.roles?.name || 'student';
+
+        res.json({
+            user: {
+                id: authData.user.id,
+                email: authData.user.email,
+                full_name: userData?.full_name || authData.user.user_metadata?.full_name,
+                role: role,
+            },
+            token: generateToken(authData.user.id, role),
+        });
     } catch (err) {
         console.error('Login Error:', err);
         res.status(500).json({ error: 'Server error' });
@@ -49,64 +54,46 @@ const loginUser = async (req, res) => {
 
 // Signup User
 const registerUser = async (req, res) => {
-    const { email, password, full_name, role = 'student' } = req.body;
+    const { email, password, full_name } = req.body;
 
     try {
-        // 1. Check if user exists
-        const { data: existingUser } = await supabase
+        // Use Supabase Auth to create user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: full_name
+                }
+            }
+        });
+
+        if (authError) {
+            return res.status(400).json({ error: authError.message });
+        }
+
+        if (!authData.user) {
+            return res.status(400).json({ error: 'Failed to create user' });
+        }
+
+        // Get user role from public.users (created by trigger)
+        const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('email')
-            .eq('email', email)
+            .select('*, roles(name)')
+            .eq('id', authData.user.id)
             .single();
 
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
-        }
+        const role = userData?.roles?.name || 'student';
 
-        // 2. Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // 3. Get Role ID
-        const { data: roleData } = await supabase
-            .from('roles')
-            .select('id')
-            .eq('name', role)
-            .single();
-
-        const roleId = roleData ? roleData.id : null;
-
-        // 4. Create User
-        const { data: newUser, error } = await supabase
-            .from('users')
-            .insert([
-                {
-                    email,
-                    password: hashedPassword,
-                    full_name,
-                    role_id: roleId,
-                },
-            ])
-            .select()
-            .single();
-
-        if (error) {
-            throw error;
-        }
-
-        if (newUser) {
-            res.status(201).json({
-                user: {
-                    id: newUser.id,
-                    email: newUser.email,
-                    full_name: newUser.full_name,
-                    role: role,
-                },
-                token: generateToken(newUser.id, role),
-            });
-        } else {
-            res.status(400).json({ error: 'Invalid user data' });
-        }
+        res.status(201).json({
+            user: {
+                id: authData.user.id,
+                email: authData.user.email,
+                full_name: full_name,
+                role: role,
+            },
+            token: generateToken(authData.user.id, role),
+        });
     } catch (err) {
         console.error('Signup Error:', err);
         res.status(500).json({ error: 'Server error' });
