@@ -42,9 +42,9 @@ const getEventRegistrations = async (req, res) => {
         const { data, error } = await supabase
             .from('registrations')
             .select(`
-        *,
-        student:student_id(full_name, email)
-      `)
+                *,
+                user:student_id(full_name, email)
+            `)
             .eq('event_id', eventId);
 
         if (error) {

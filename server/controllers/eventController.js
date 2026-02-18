@@ -123,10 +123,39 @@ const deleteEvent = async (req, res) => {
     }
 };
 
+// Get event report (admin only)
+const getEventReport = async (req, res) => {
+    try {
+        const { data: events, error } = await supabase
+            .from('events')
+            .select(`
+                *,
+                creator:created_by(full_name, email),
+                coordinator:coordinator_id(full_name, email),
+                registrations(count)
+            `)
+            .order('date', { ascending: false });
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        const report = events.map(event => ({
+            ...event,
+            registration_count: event.registrations?.[0]?.count || 0
+        }));
+
+        res.json(report);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
 module.exports = {
     getEvents,
     getEventById,
     createEvent,
     updateEvent,
     deleteEvent,
+    getEventReport,
 };

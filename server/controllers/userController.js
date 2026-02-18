@@ -150,9 +150,56 @@ const updateProfile = async (req, res) => {
     }
 };
 
+// Get all faculty (admin only)
+const getAllFaculty = async (req, res) => {
+    try {
+        const { data: roleData } = await supabase
+            .from('roles')
+            .select('id')
+            .eq('name', 'faculty')
+            .single();
+
+        const { data: faculty, error } = await supabase
+            .from('users')
+            .select('id, email, full_name, avatar_url, created_at')
+            .eq('role_id', roleData.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        res.json(faculty);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Remove faculty (admin only)
+const removeFaculty = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        res.json({ message: 'Faculty removed successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
 module.exports = {
     loginUser,
     registerUser,
     getProfile,
     updateProfile,
+    getAllFaculty,
+    removeFaculty,
 };

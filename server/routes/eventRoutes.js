@@ -29,4 +29,7 @@ router.delete(
     eventController.deleteEvent
 );
 
+// Admin only route
+router.get('/admin/report', authorizeRole(['admin']), eventController.getEventReport);
+
 module.exports = router;

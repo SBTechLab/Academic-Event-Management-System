@@ -10,6 +10,24 @@ import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
 import Events from './pages/Events';
 import CoordinatorRequests from './pages/CoordinatorRequests';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+
+// Dashboard redirect component
+const DashboardRedirect = () => {
+    const { role } = useAuth();
+    
+    switch (role) {
+        case 'admin':
+            return <Navigate to="/admin-dashboard" replace />;
+        case 'faculty':
+            return <Navigate to="/faculty-dashboard" replace />;
+        case 'student':
+            return <Navigate to="/student-dashboard" replace />;
+        default:
+            return <Navigate to="/student-dashboard" replace />;
+    }
+};
 
 const router = createBrowserRouter([
     {
@@ -19,6 +37,10 @@ const router = createBrowserRouter([
             {
                 path: '/',
                 element: <Home />,
+            },
+            {
+                path: '/dashboard',
+                element: <DashboardRedirect />,
             },
             {
                 path: '/events',
@@ -53,7 +75,7 @@ const router = createBrowserRouter([
                 element: <EventDetails />,
             },
             {
-                path: '/events/create',
+                path: '/create-event',
                 element: <CreateEvent />,
             },
         ],
