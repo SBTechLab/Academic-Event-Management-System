@@ -12,41 +12,64 @@ const EventDetails = () => {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const [registrations, setRegistrations] = useState([]);
+    const [isRegistered, setIsRegistered] = useState(false);
+    const [showRoleModal, setShowRoleModal] = useState(false);
+    const [selectedRole, setSelectedRole] = useState('participant');
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        const fetchEvent = async () => {
-            try {
-                const response = await fetch(`http://localhost:5001/api/events/${id}`);
-                if (!response.ok) throw new Error('Event not found');
-                const data = await response.json();
-                setEvent(data);
-                
-                // If admin, also fetch registrations
-                if (role === 'admin') {
-                    const regResponse = await fetch(`http://localhost:5001/api/registrations/event/${id}`, {
-                        headers: getAuthHeaders()
-                    });
-                    if (regResponse.ok) {
-                        const regData = await regResponse.json();
-                        setRegistrations(regData);
+        fetchEvent();
+    }, [id]);
+
+    const fetchEvent = async () => {
+        try {
+            const response = await fetch(`http://localhost:5001/api/events/${id}`);
+            if (!response.ok) throw new Error('Event not found');
+            const data = await response.json();
+            setEvent(data);
+            
+            // Check if student is already registered
+            if (role === 'student' || role === 'student_coordinator') {
+                const checkRes = await fetch(`http://localhost:5001/api/registrations/check/${id}`, {
+                    headers: getAuthHeaders()
+                });
+                if (checkRes.ok) {
+                    const checkData = await checkRes.json();
+                    setIsRegistered(checkData.registered);
+                    if (checkData.registration) {
+                        setSelectedRole(checkData.registration.role_type || 'participant');
                     }
                 }
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
             }
-        };
-
-        fetchEvent();
-    }, [id, role, getAuthHeaders]);
+            
+            // If admin, also fetch registrations
+            if (role === 'admin') {
+                const regResponse = await fetch(`http://localhost:5001/api/registrations/event/${id}`, {
+                    headers: getAuthHeaders()
+                });
+                if (regResponse.ok) {
+                    const regData = await regResponse.json();
+                    setRegistrations(regData);
+                }
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleRegister = async () => {
         if (!user) {
             navigate('/login');
             return;
         }
+        setShowRoleModal(true);
+    };
 
+    const confirmRegistration = async () => {
         setRegistering(true);
         setMessage('');
         setError('');
@@ -55,7 +78,7 @@ const EventDetails = () => {
             const response = await fetch('http://localhost:5001/api/registrations', {
                 method: 'POST',
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ event_id: id })
+                body: JSON.stringify({ event_id: id, role_type: selectedRole })
             });
 
             const data = await response.json();
@@ -64,7 +87,13 @@ const EventDetails = () => {
                 throw new Error(data.error || 'Registration failed');
             }
 
-            setMessage('Successfully registered!');
+            setMessage(`Successfully registered as ${selectedRole}!`);
+            setIsRegistered(true);
+            setShowRoleModal(false);
+            if (selectedRole === 'coordinator') {
+                setMessage('Coordinator request submitted! Waiting for faculty approval.');
+            }
+            fetchEvent();
         } catch (err) {
             setError(err.message);
         } finally {
@@ -72,113 +101,317 @@ const EventDetails = () => {
         }
     };
 
+    const handleApprove = async () => {
+        setSubmitting(true);
+        try {
+            const response = await fetch(`http://localhost:5001/api/events/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status: 'approved' })
+            });
+            if (response.ok) {
+                setMessage('Event approved successfully!');
+                setTimeout(() => navigate('/admin-dashboard'), 1500);
+            }
+        } catch (err) {
+            setError('Failed to approve event');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!rejectionReason.trim()) {
+            setError('Please provide a reason for rejection');
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const response = await fetch(`http://localhost:5001/api/events/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status: 'rejected', rejection_reason: rejectionReason })
+            });
+            if (response.ok) {
+                setMessage('Event rejected successfully!');
+                setTimeout(() => navigate('/admin-dashboard'), 1500);
+            }
+        } catch (err) {
+            setError('Failed to reject event');
+        } finally {
+            setSubmitting(false);
+            setShowRejectModal(false);
+        }
+    };
+
     if (loading) return <div className="text-center py-10">Loading details...</div>;
     if (!event) return <div className="text-center py-10 text-red-500">Event not found</div>;
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <button onClick={() => navigate(-1)} className="mb-4 text-primary hover:underline">&larr; Back</button>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+            <div className="max-w-5xl mx-auto">
+                <button onClick={() => navigate(-1)} className="mb-4 text-blue-600 hover:text-blue-800 font-medium">&larr; Back</button>
 
-            <div className="bg-surface rounded-lg shadow-md overflow-hidden border border-gray-100">
-                {event.image_url && (
-                    <img
-                        src={event.image_url}
-                        alt={event.title}
-                        className="w-full h-64 object-cover"
-                    />
-                )}
-                <div className="p-8">
-                    <h1 className="text-3xl font-bold text-primary mb-2">{event.title}</h1>
-                    <div className="flex flex-col md:flex-row md:items-center text-secondary mb-6 space-y-2 md:space-y-0 md:space-x-6">
-                        <span>📅 {new Date(event.date).toLocaleDateString()}</span>
-                        <span>⏰ {event.time}</span>
-                        <span>📍 {event.location}</span>
-                    </div>
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    {event.image_url && (
+                        <img
+                            src={event.image_url}
+                            alt={event.title}
+                            className="w-full h-64 object-cover"
+                        />
+                    )}
+                    <div className="p-8">
+                        <h1 className="text-4xl font-bold text-gray-800 mb-4">{event.title}</h1>
+                        <div className="flex flex-wrap gap-4 text-gray-600 mb-6">
+                            <span className="flex items-center gap-2">📅 {new Date(event.date).toLocaleDateString()}</span>
+                            <span className="flex items-center gap-2">🕐 {event.time}</span>
+                            <span className="flex items-center gap-2">📍 {event.location}</span>
+                        </div>
 
-                    <div className="prose max-w-none text-text mb-8">
-                        <p className="whitespace-pre-line">{event.description}</p>
-                    </div>
+                        <div className="prose max-w-none text-gray-700 mb-8">
+                            <p className="whitespace-pre-line text-lg">{event.description}</p>
+                        </div>
 
-                    {/* Admin-specific event details */}
-                    {role === 'admin' && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                            <h3 className="text-lg font-semibold text-blue-800 mb-4">📋 Event Management Details</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <span className="font-medium text-gray-700">Created by:</span>
-                                    <span className="ml-2 text-gray-900">{event.creator?.full_name || 'Unknown'}</span>
-                                </div>
-                                <div>
-                                    <span className="font-medium text-gray-700">Creator Email:</span>
-                                    <span className="ml-2 text-gray-900">{event.creator?.email || 'N/A'}</span>
-                                </div>
-                                <div>
-                                    <span className="font-medium text-gray-700">Status:</span>
-                                    <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
-                                        event.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                        event.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                        'bg-red-100 text-red-800'
-                                    }`}>
-                                        {event.status}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="font-medium text-gray-700">Registrations:</span>
-                                    <span className="ml-2 text-gray-900">{registrations.length} participants</span>
-                                </div>
-                            </div>
-                            
-                            {registrations.length > 0 && (
-                                <div className="mt-4">
-                                    <h4 className="font-medium text-gray-700 mb-2">Registered Participants:</h4>
-                                    <div className="max-h-32 overflow-y-auto bg-white rounded border p-2">
-                                        {registrations.map((reg, index) => (
-                                            <div key={index} className="text-sm text-gray-600 py-1">
-                                                • {reg.user?.full_name || 'Unknown'} ({reg.user?.email || 'N/A'})
-                                            </div>
-                                        ))}
+                        {/* Admin-specific event details */}
+                        {role === 'admin' && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                                <h3 className="text-lg font-semibold text-blue-800 mb-4">📋 Event Management Details</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span className="font-medium text-gray-700">Created by:</span>
+                                        <span className="ml-2 text-gray-900">{event.creator?.full_name || 'Unknown'}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-700">Creator Email:</span>
+                                        <span className="ml-2 text-gray-900">{event.creator?.email || 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-700">Status:</span>
+                                        <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                                            event.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                            event.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-red-100 text-red-800'
+                                        }`}>
+                                            {event.status}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-700">Registrations:</span>
+                                        <span className="ml-2 text-gray-900">{registrations.length} participants</span>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    )}
+                                
+                                {registrations.length > 0 && (
+                                    <div className="mt-4">
+                                        <h4 className="font-medium text-gray-700 mb-2">Registered Participants:</h4>
+                                        <div className="max-h-32 overflow-y-auto bg-white rounded border p-2">
+                                            {registrations.map((reg, index) => (
+                                                <div key={index} className="text-sm text-gray-600 py-1 flex justify-between">
+                                                    <span>• {reg.user?.full_name || 'Unknown'} ({reg.user?.email || 'N/A'})</span>
+                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                                        reg.role_type === 'coordinator' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                                                    }`}>
+                                                        {reg.role_type || 'participant'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
-                    {message && (
-                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                            {message}
-                        </div>
-                    )}
+                        {message && (
+                            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4">
+                                {message}
+                            </div>
+                        )}
 
-                    {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                            {error}
-                        </div>
-                    )}
+                        {error && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+                                {error}
+                            </div>
+                        )}
 
-                    <div className="flex justify-end">
-                        {role === 'admin' ? (
-                            <div className="flex gap-3">
+                        <div className="flex justify-end gap-3">
+                            {role === 'admin' ? (
+                                <>
+                                    <button
+                                        onClick={() => navigate('/admin-dashboard')}
+                                        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                                    >
+                                        ← Back to Dashboard
+                                    </button>
+                                    {event.status === 'pending' && (
+                                        <>
+                                            <button
+                                                onClick={handleApprove}
+                                                disabled={submitting}
+                                                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
+                                            >
+                                                ✓ Approve Event
+                                            </button>
+                                            <button
+                                                onClick={() => setShowRejectModal(true)}
+                                                disabled={submitting}
+                                                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
+                                            >
+                                                ✗ Reject Event
+                                            </button>
+                                        </>
+                                    )}
+                                </>
+                            ) : role === 'faculty' ? (
                                 <button
-                                    onClick={() => navigate('/admin-dashboard')}
+                                    onClick={() => navigate('/faculty-dashboard')}
                                     className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
                                 >
                                     ← Back to Dashboard
                                 </button>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={handleRegister}
-                                disabled={registering || message}
-                                className={`px-8 py-3 rounded-lg font-bold text-white transition-colors ${
-                                    message ? 'bg-green-500 cursor-default' : 'bg-primary hover:bg-opacity-90'
-                                }`}
-                            >
-                                {registering ? 'Registering...' : message ? 'Registered' : 'Register for Event'}
-                            </button>
-                        )}
+                            ) : isRegistered ? (
+                                <div className="bg-green-50 border border-green-200 rounded-lg px-6 py-3">
+                                    <p className="text-green-800 font-medium">
+                                        ✓ Registered for this Event
+                                    </p>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleRegister}
+                                    disabled={registering}
+                                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
+                                >
+                                    Register for Event
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Rejection Modal */}
+            {showRejectModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">Reject Event</h3>
+                            <button
+                                onClick={() => {
+                                    setShowRejectModal(false);
+                                    setRejectionReason('');
+                                    setError('');
+                                }}
+                                className="text-gray-400 hover:text-gray-600 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <p className="text-gray-600 mb-4">Please provide a reason for rejecting this event:</p>
+                        <textarea
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            placeholder="Enter rejection reason..."
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                            rows="4"
+                        />
+                        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowRejectModal(false);
+                                    setRejectionReason('');
+                                    setError('');
+                                }}
+                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleReject}
+                                disabled={submitting || !rejectionReason.trim()}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
+                            >
+                                {submitting ? 'Rejecting...' : 'Reject Event'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Role Selection Modal */}
+            {showRoleModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">Select Your Role</h3>
+                            <button
+                                onClick={() => {
+                                    setShowRoleModal(false);
+                                    setSelectedRole('participant');
+                                }}
+                                className="text-gray-400 hover:text-gray-600 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <p className="text-gray-600 mb-4">Choose how you want to participate in this event:</p>
+                        
+                        <div className="space-y-3 mb-6">
+                            <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition ${
+                                selectedRole === 'participant' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                            }`}>
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="participant"
+                                    checked={selectedRole === 'participant'}
+                                    onChange={(e) => setSelectedRole(e.target.value)}
+                                    className="mt-1 mr-3"
+                                />
+                                <div>
+                                    <div className="font-semibold text-gray-900">👥 Participant</div>
+                                    <div className="text-sm text-gray-600">Attend and participate in the event</div>
+                                </div>
+                            </label>
+                            
+                            <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition ${
+                                selectedRole === 'coordinator' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300'
+                            }`}>
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="coordinator"
+                                    checked={selectedRole === 'coordinator'}
+                                    onChange={(e) => setSelectedRole(e.target.value)}
+                                    className="mt-1 mr-3"
+                                />
+                                <div>
+                                    <div className="font-semibold text-gray-900">⭐ Event Coordinator</div>
+                                    <div className="text-sm text-gray-600">Help organize and manage the event</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowRoleModal(false);
+                                    setSelectedRole('participant');
+                                }}
+                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmRegistration}
+                                disabled={registering}
+                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                            >
+                                {registering ? 'Registering...' : 'Confirm Registration'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -6,10 +6,9 @@ const getEvents = async (req, res) => {
         const { data: events, error } = await supabase
             .from('events')
             .select(`
-        *,
-        creator:created_by(full_name),
-        coordinator:coordinator_id(full_name)
-      `)
+                *,
+                creator:users!created_by(full_name, email)
+            `)
             .order('date', { ascending: true });
 
         if (error) {
@@ -18,6 +17,7 @@ const getEvents = async (req, res) => {
 
         res.json(events);
     } catch (err) {
+        console.error('Get events error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 };
@@ -30,10 +30,9 @@ const getEventById = async (req, res) => {
         const { data: event, error } = await supabase
             .from('events')
             .select(`
-        *,
-        creator:created_by(full_name),
-        coordinator:coordinator_id(full_name)
-      `)
+                *,
+                creator:users!created_by(full_name, email)
+            `)
             .eq('id', id)
             .single();
 
@@ -49,7 +48,7 @@ const getEventById = async (req, res) => {
 
 // Create event
 const createEvent = async (req, res) => {
-    const { title, description, date, time, location, coordinator_id, image_url } = req.body;
+    const { title, description, date, time, location, coordinator_id, image_url, event_type } = req.body;
 
     try {
         const { data, error } = await supabase
@@ -63,8 +62,9 @@ const createEvent = async (req, res) => {
                     location,
                     coordinator_id,
                     image_url,
+                    event_type: event_type || 'general',
                     created_by: req.user.id,
-                    status: 'pending' // Default status
+                    status: 'pending'
                 }
             ])
             .select()
@@ -76,6 +76,7 @@ const createEvent = async (req, res) => {
 
         res.status(201).json(data);
     } catch (err) {
+        console.error('Create event error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 };
@@ -86,6 +87,13 @@ const updateEvent = async (req, res) => {
     const updates = req.body;
 
     try {
+        // Get the event first to check status change
+        const { data: oldEvent } = await supabase
+            .from('events')
+            .select('status, created_by, title')
+            .eq('id', id)
+            .single();
+
         const { data, error } = await supabase
             .from('events')
             .update(updates)
@@ -95,6 +103,22 @@ const updateEvent = async (req, res) => {
 
         if (error) {
             return res.status(400).json({ error: error.message });
+        }
+
+        // Create notification if status changed
+        if (oldEvent && updates.status && oldEvent.status !== updates.status) {
+            const message = updates.status === 'approved' 
+                ? `Your event "${oldEvent.title}" has been approved!`
+                : `Your event "${oldEvent.title}" has been rejected.`;
+
+            await supabase
+                .from('notifications')
+                .insert([{
+                    user_id: oldEvent.created_by,
+                    message: message,
+                    type: updates.status === 'approved' ? 'success' : 'warning',
+                    is_read: false
+                }]);
         }
 
         res.json(data);
@@ -130,8 +154,7 @@ const getEventReport = async (req, res) => {
             .from('events')
             .select(`
                 *,
-                creator:created_by(full_name, email),
-                coordinator:coordinator_id(full_name, email),
+                creator:users!created_by(full_name, email),
                 registrations(count)
             `)
             .order('date', { ascending: false });

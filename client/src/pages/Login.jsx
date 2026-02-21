@@ -14,82 +14,97 @@ const Login = () => {
         e.preventDefault();
         setError('');
         setLoading(true);
+
         try {
-            await login(email, password);
-            const userRole = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).role : 'student';
-            if (userRole === 'admin') {
-                navigate('/admin-dashboard');
-            } else if (userRole === 'faculty') {
-                navigate('/faculty-dashboard');
-            } else if (userRole === 'student_coordinator') {
-                navigate('/student-dashboard');
-            } else {
-                navigate('/student-dashboard');
+            const user = await login(email, password);
+            
+            // Navigate based on user role
+            switch (user.role) {
+                case 'admin':
+                    navigate('/admin-dashboard');
+                    break;
+                case 'faculty':
+                    navigate('/faculty-dashboard');
+                    break;
+                case 'student':
+                default:
+                    navigate('/student-dashboard');
+                    break;
             }
         } catch (err) {
-            console.error('Login Error:', err);
-            setError(err.message || 'Failed to login. Please check your credentials.');
+            setError('Invalid email or password.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="max-w-md mx-auto mt-10">
-            <div className="bg-card p-8 rounded-lg shadow-md border border-gray-100">
-                <h2 className="text-2xl font-bold text-center text-primary mb-6">Welcome Back</h2>
+        <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
+
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10">
+
+                {/* Title */}
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-gray-800">
+                        Login to UniEvents
+                    </h2>
+                    <p className="text-gray-500 mt-2 text-sm">
+                        Access your academic dashboard
+                    </p>
+                </div>
 
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                        <span className="block sm:inline">{error}</span>
+                    <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                        {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-text text-sm font-bold mb-2" htmlFor="email">
+                <form onSubmit={handleSubmit} className="space-y-5">
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                             Email
                         </label>
                         <input
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-text leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                            id="email"
                             type="email"
-                            placeholder="Enter your email"
+                            required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            required
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            placeholder="you@university.edu"
                         />
                     </div>
-                    <div className="mb-6">
-                        <label className="block text-text text-sm font-bold mb-2" htmlFor="password">
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                             Password
                         </label>
                         <input
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-text leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                            id="password"
                             type="password"
-                            placeholder="Enter your password"
+                            required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            required
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            placeholder="Enter your password"
                         />
                     </div>
-                    <div className="flex items-center justify-between">
-                        <button
-                            className="bg-primary hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full transition-colors disabled:opacity-50"
-                            type="submit"
-                            disabled={loading}
-                        >
-                            {loading ? 'Logging in...' : 'Login'}
-                        </button>
-                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition disabled:opacity-60 shadow-md"
+                    >
+                        {loading ? 'Signing in...' : 'Sign In'}
+                    </button>
                 </form>
-                <p className="mt-4 text-center text-sm text-text/60">
-                    Don't have an account?{' '}
-                    <Link to="/signup" className="text-secondary hover:text-primary font-medium">
+
+                <p className="mt-6 text-sm text-center text-gray-600">
+                    Don’t have an account?{' '}
+                    <Link to="/signup" className="text-blue-600 font-medium hover:underline">
                         Sign Up
                     </Link>
                 </p>
+
             </div>
         </div>
     );

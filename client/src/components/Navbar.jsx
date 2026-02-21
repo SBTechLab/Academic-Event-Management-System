@@ -31,55 +31,91 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="bg-white shadow-lg border-b border-gray-200">
-            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-                <Link to="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                    🎓 UniEvents
+        <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+                {/* Logo */}
+                <Link 
+                    to="/" 
+                    className="text-2xl font-extrabold text-blue-600 tracking-tight hover:text-blue-700 transition-colors"
+                >
+                    UniEvents
                 </Link>
-                <div className="flex space-x-6 items-center">
-                    <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+
+                {/* Navigation Links */}
+                <div className="flex items-center space-x-8">
+
+                    <Link 
+                        to="/" 
+                        className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+                    >
                         Home
                     </Link>
-                    <Link to="/events" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+
+                    <Link 
+                        to="/events" 
+                        className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+                    >
                         Events
                     </Link>
-                    <div className="flex space-x-4 ml-4 items-center">
+
+                    {/* Auth Section */}
+                    <div className="flex items-center space-x-4">
+
                         {user ? (
                             <>
-                                <Link 
-                                    to={getDashboardLink()} 
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                                {/* Dashboard Button */}
+                                <Link
+                                    to={getDashboardLink()}
+                                    className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl shadow-sm hover:bg-blue-700 hover:shadow-md transition-all duration-200"
                                 >
-                                    📊 Dashboard
+                                    Dashboard
                                 </Link>
-                                <div className="text-gray-700 text-sm">
-                                    👋 {user.full_name} ({role})
+
+                                {/* User Info */}
+                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full">
+                                    <span className="font-medium">{user.full_name}</span>
+                                    <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full capitalize">
+                                        {role}
+                                    </span>
                                 </div>
+
+                                {/* Logout */}
                                 <button
                                     onClick={handleLogout}
-                                    className="text-gray-700 hover:text-red-600 transition-colors font-medium"
+                                    className="text-gray-600 hover:text-red-600 font-medium transition-colors"
                                 >
-                                    🚪 Logout
+                                    Logout
                                 </button>
                             </>
                         ) : (
                             <>
-                                <Link to="/login" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                                <Link
+                                    to="/login"
+                                    className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+                                >
                                     Login
                                 </Link>
-                                <Link to="/signup" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm">
+
+                                <Link
+                                    to="/signup"
+                                    className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl shadow-sm hover:bg-blue-700 hover:shadow-md transition-all duration-200"
+                                >
                                     Sign Up
                                 </Link>
                             </>
                         )}
+
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="ml-2 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                            title="Toggle Theme"
+                        >
+                            {theme === 'light' ? '🌙' : '☀️'}
+                        </button>
+
                     </div>
-                    <button
-                        onClick={toggleTheme}
-                        className="ml-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700"
-                        title="Toggle Theme"
-                    >
-                        {theme === 'light' ? '🌙' : '☀️'}
-                    </button>
                 </div>
             </div>
         </nav>

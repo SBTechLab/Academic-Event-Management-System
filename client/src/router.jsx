@@ -8,8 +8,10 @@ import FacultyDashboard from './pages/FacultyDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
+import EditEvent from './pages/EditEvent';
 import Events from './pages/Events';
 import CoordinatorRequests from './pages/CoordinatorRequests';
+import MyEvents from './pages/MyEvents';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -69,6 +71,14 @@ const router = createBrowserRouter([
             {
                 path: '/coordinator-requests',
                 element: <CoordinatorRequests />,
+            },
+            {
+                path: '/my-events',
+                element: <MyEvents />,
+            },
+            {
+                path: '/events/:id/edit',
+                element: <EditEvent />,
             },
             {
                 path: '/events/:id',

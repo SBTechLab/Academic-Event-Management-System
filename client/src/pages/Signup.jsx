@@ -28,9 +28,9 @@ const Signup = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto mt-10">
-            <div className="bg-card p-8 rounded-lg shadow-md border border-gray-100">
-                <h2 className="text-2xl font-bold text-center text-primary mb-6">Create Account</h2>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
+                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Create Account</h2>
 
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
@@ -40,11 +40,11 @@ const Signup = () => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-text text-sm font-bold mb-2" htmlFor="fullName">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fullName">
                             Full Name
                         </label>
                         <input
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-text leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             id="fullName"
                             type="text"
                             placeholder="John Doe"
@@ -54,11 +54,11 @@ const Signup = () => {
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-text text-sm font-bold mb-2" htmlFor="email">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
                             Email
                         </label>
                         <input
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-text leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             id="email"
                             type="email"
                             placeholder="Enter your email"
@@ -68,11 +68,11 @@ const Signup = () => {
                         />
                     </div>
                     <div className="mb-6">
-                        <label className="block text-text text-sm font-bold mb-2" htmlFor="password">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
                             Password
                         </label>
                         <input
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-text leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             id="password"
                             type="password"
                             placeholder="Create a password"
@@ -84,7 +84,7 @@ const Signup = () => {
                     </div>
                     <div className="flex items-center justify-between">
                         <button
-                            className="bg-primary hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full transition-colors disabled:opacity-50"
+                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline w-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             type="submit"
                             disabled={loading}
                         >
@@ -92,9 +92,9 @@ const Signup = () => {
                         </button>
                     </div>
                 </form>
-                <p className="mt-4 text-center text-sm text-text/60">
+                <p className="mt-6 text-center text-sm text-gray-600">
                     Already have an account?{' '}
-                    <Link to="/login" className="text-secondary hover:text-primary font-medium">
+                    <Link to="/login" className="text-purple-600 hover:text-purple-800 font-medium">
                         Login
                     </Link>
                 </p>

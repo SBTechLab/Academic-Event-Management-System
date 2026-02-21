@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const CreateEvent = () => {
-    const { user, getAuthHeaders, role } = useAuth();
+const EditEvent = () => {
+    const { id } = useParams();
+    const { getAuthHeaders, role } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -15,8 +16,36 @@ const CreateEvent = () => {
         time: '',
         location: '',
         image_url: '',
-        event_type: 'technical'
+        event_type: 'technical',
+        update_reason: ''
     });
+
+    useEffect(() => {
+        fetchEvent();
+    }, [id]);
+
+    const fetchEvent = async () => {
+        try {
+            const response = await fetch(`http://localhost:5001/api/events/${id}`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setFormData({
+                    title: data.title,
+                    description: data.description,
+                    date: data.date,
+                    time: data.time,
+                    location: data.location,
+                    image_url: data.image_url || '',
+                    event_type: data.event_type || 'technical',
+                    update_reason: ''
+                });
+            }
+        } catch (err) {
+            setError('Failed to load event');
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,24 +53,28 @@ const CreateEvent = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!formData.update_reason.trim()) {
+            setError('Please provide a reason for updating this event');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
         try {
-            const response = await fetch('http://localhost:5001/api/events', {
-                method: 'POST',
+            const response = await fetch(`http://localhost:5001/api/events/${id}`, {
+                method: 'PUT',
                 headers: getAuthHeaders(),
-                body: JSON.stringify(formData)
+                body: JSON.stringify({ ...formData, status: 'pending' })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to create event');
+                throw new Error(errorData.error || 'Failed to update event');
             }
 
-            const dashboardRoute = role === 'admin' ? '/admin-dashboard' : 
-                                   role === 'faculty' ? '/faculty-dashboard' : 
-                                   '/student-dashboard';
+            const dashboardRoute = role === 'faculty' ? '/faculty-dashboard' : '/admin-dashboard';
             navigate(dashboardRoute);
         } catch (err) {
             setError(err.message);
@@ -52,7 +85,7 @@ const CreateEvent = () => {
 
     return (
         <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Create New Event</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Edit Event</h2>
 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -158,7 +191,7 @@ const CreateEvent = () => {
                     />
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image_url">
                         Image URL (Optional)
                     </label>
@@ -169,6 +202,22 @@ const CreateEvent = () => {
                         type="url"
                         placeholder="https://example.com/image.jpg"
                         value={formData.image_url}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                <div className="mb-6">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="update_reason">
+                        Reason for Update <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                        className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="update_reason"
+                        name="update_reason"
+                        rows="3"
+                        required
+                        placeholder="Explain why you're updating this event..."
+                        value={formData.update_reason}
                         onChange={handleChange}
                     />
                 </div>
@@ -186,7 +235,7 @@ const CreateEvent = () => {
                         disabled={loading}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none disabled:opacity-50"
                     >
-                        {loading ? 'Creating...' : 'Create Event'}
+                        {loading ? 'Updating...' : 'Update Event'}
                     </button>
                 </div>
             </form>
@@ -194,4 +243,4 @@ const CreateEvent = () => {
     );
 };
 
-export default CreateEvent;
+export default EditEvent;
