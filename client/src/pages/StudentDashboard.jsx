@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { fetchWithCache } from '../cacheUtils';
 
 const StudentDashboard = () => {
     const { user, getAuthHeaders } = useAuth();
@@ -10,6 +11,12 @@ const StudentDashboard = () => {
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [displayCount, setDisplayCount] = useState(10);
+
+    const isEventCompleted = (eventDate, eventTime) => {
+        const now = new Date();
+        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+        return eventDateTime < now;
+    };
 
     const eventTypes = [
         { value: 'all', label: 'All Events', icon: '🎯' },
@@ -32,28 +39,15 @@ const StudentDashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const [eventsRes, registrationsRes] = await Promise.all([
-                fetch('http://localhost:5001/api/events', {
-                    headers: getAuthHeaders()
-                }),
-                fetch('http://localhost:5001/api/registrations/my-registrations', {
-                    headers: getAuthHeaders()
-                })
+            const [eventsData, regData] = await Promise.all([
+                fetchWithCache('http://localhost:5001/api/events?limit=50'),
+                fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
             ]);
-
-            if (eventsRes.ok) {
-                const eventsData = await eventsRes.json();
-                const approvedEvents = eventsData.filter(e => e.status === 'approved');
-                setAllEvents(approvedEvents);
-            }
-
-            if (registrationsRes.ok) {
-                const regData = await registrationsRes.json();
-                setRegistrations(regData);
-            }
+            setAllEvents(eventsData.filter(e => e.status === 'approved'));
+            setRegistrations(regData);
+            setLoading(false);
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-        } finally {
+            console.error(error);
             setLoading(false);
         }
     };
@@ -69,7 +63,7 @@ const StudentDashboard = () => {
 
 
     if (loading) {
-        return <div className="flex justify-center items-center h-64">Loading...</div>;
+        return <div className="flex justify-center items-center h-screen">Loading...</div>;
     }
 
     return (
@@ -134,10 +128,19 @@ const StudentDashboard = () => {
                     {filteredEvents.length > 0 ? (
                         <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {filteredEvents.slice(0, displayCount).map((event) => (
+                            {filteredEvents.slice(0, displayCount).map((event) => {
+                                const isCompleted = isEventCompleted(event.date, event.time);
+                                return (
                                 <div key={event.id} className="bg-gray-50 rounded-lg p-5 border border-gray-200 hover:shadow-md transition">
                                     <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-semibold text-lg text-gray-800">{event.title}</h3>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h3 className="font-semibold text-lg text-gray-800">{event.title}</h3>
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                isCompleted ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
+                                            }`}>
+                                                {isCompleted ? '✓ Completed' : '📅 Upcoming'}
+                                            </span>
+                                        </div>
                                         <span className="text-2xl">{eventTypes.find(t => t.value === event.event_type)?.icon || '📌'}</span>
                                     </div>
                                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">{event.description}</p>
@@ -153,7 +156,7 @@ const StudentDashboard = () => {
                                         View Details & Register
                                     </Link>
                                 </div>
-                            ))}
+                            );})}
                         </div>
                         {filteredEvents.length > displayCount && (
                             <div className="flex justify-center mt-6">

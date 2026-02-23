@@ -14,13 +14,13 @@ router.get('/check/:eventId', authorizeRole(['student', 'student_coordinator']),
 // Coordinator/Faculty routes
 router.get(
     '/event/:eventId',
-    authorizeRole(['admin', 'faculty', 'student_coordinator']),
+    authorizeRole(['admin', 'faculty', 'student_coordinator', 'student']),
     registrationController.getEventRegistrations
 );
 
 router.put(
     '/:id/status',
-    authorizeRole(['admin', 'faculty', 'student_coordinator']),
+    authorizeRole(['admin', 'faculty', 'student_coordinator', 'student']),
     registrationController.updateRegistrationStatus
 );
 

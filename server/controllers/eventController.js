@@ -3,18 +3,19 @@ const supabase = require('../config/supabase');
 // Get all events
 const getEvents = async (req, res) => {
     try {
+        const { limit = 50 } = req.query;
+        
         const { data: events, error } = await supabase
             .from('events')
-            .select(`
-                *,
-                creator:users!created_by(full_name, email)
-            `)
-            .order('date', { ascending: true });
+            .select('id, title, description, date, time, location, status, event_type, image_url, created_at, created_by')
+            .order('date', { ascending: true })
+            .limit(parseInt(limit));
 
         if (error) {
             return res.status(400).json({ error: error.message });
         }
 
+        res.set('Cache-Control', 'public, max-age=60');
         res.json(events);
     } catch (err) {
         console.error('Get events error:', err);
@@ -40,6 +41,7 @@ const getEventById = async (req, res) => {
             return res.status(404).json({ error: 'Event not found' });
         }
 
+        res.set('Cache-Control', 'public, max-age=60');
         res.json(event);
     } catch (err) {
         res.status(500).json({ error: 'Server error' });

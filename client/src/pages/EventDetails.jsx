@@ -44,8 +44,8 @@ const EventDetails = () => {
                 }
             }
             
-            // If admin, also fetch registrations
-            if (role === 'admin') {
+            // If admin or faculty, also fetch registrations
+            if (role === 'admin' || role === 'faculty') {
                 const regResponse = await fetch(`http://localhost:5001/api/registrations/event/${id}`, {
                     headers: getAuthHeaders()
                 });
@@ -172,11 +172,11 @@ const EventDetails = () => {
                             <p className="whitespace-pre-line text-lg">{event.description}</p>
                         </div>
 
-                        {/* Admin-specific event details */}
-                        {role === 'admin' && (
+                        {/* Admin & Faculty event details */}
+                        {(role === 'admin' || role === 'faculty') && (
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
                                 <h3 className="text-lg font-semibold text-blue-800 mb-4">📋 Event Management Details</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
                                     <div>
                                         <span className="font-medium text-gray-700">Created by:</span>
                                         <span className="ml-2 text-gray-900">{event.creator?.full_name || 'Unknown'}</span>
@@ -197,26 +197,62 @@ const EventDetails = () => {
                                         </span>
                                     </div>
                                     <div>
-                                        <span className="font-medium text-gray-700">Registrations:</span>
-                                        <span className="ml-2 text-gray-900">{registrations.length} participants</span>
+                                        <span className="font-medium text-gray-700">Total Registrations:</span>
+                                        <span className="ml-2 text-gray-900 font-semibold">{registrations.length}</span>
                                     </div>
                                 </div>
                                 
                                 {registrations.length > 0 && (
                                     <div className="mt-4">
-                                        <h4 className="font-medium text-gray-700 mb-2">Registered Participants:</h4>
-                                        <div className="max-h-32 overflow-y-auto bg-white rounded border p-2">
-                                            {registrations.map((reg, index) => (
-                                                <div key={index} className="text-sm text-gray-600 py-1 flex justify-between">
-                                                    <span>• {reg.user?.full_name || 'Unknown'} ({reg.user?.email || 'N/A'})</span>
-                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                                        reg.role_type === 'coordinator' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                                                    }`}>
-                                                        {reg.role_type || 'participant'}
-                                                    </span>
+                                        <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                            <span>👥 Registered Participants ({registrations.filter(r => r.role_type === 'participant').length})</span>
+                                        </h4>
+                                        <div className="max-h-64 overflow-y-auto bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+                                            {registrations.filter(r => r.role_type === 'participant').map((reg) => (
+                                                <div key={reg.id} className="p-3 hover:bg-gray-50 transition">
+                                                    <div className="flex justify-between items-center">
+                                                        <div>
+                                                            <p className="font-medium text-gray-900">{reg.user?.full_name || 'Unknown'}</p>
+                                                            <p className="text-xs text-gray-600">{reg.user?.email || 'N/A'}</p>
+                                                        </div>
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                            reg.status === 'attended' ? 'bg-green-100 text-green-700' :
+                                                            reg.status === 'registered' ? 'bg-blue-100 text-blue-700' :
+                                                            'bg-gray-100 text-gray-700'
+                                                        }`}>
+                                                            {reg.status}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
+                                        
+                                        {registrations.filter(r => r.role_type === 'coordinator').length > 0 && (
+                                            <div className="mt-4">
+                                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                                    <span>⭐ Event Coordinators ({registrations.filter(r => r.role_type === 'coordinator').length})</span>
+                                                </h4>
+                                                <div className="bg-purple-50 rounded-lg border border-purple-200 divide-y divide-purple-100">
+                                                    {registrations.filter(r => r.role_type === 'coordinator').map((reg) => (
+                                                        <div key={reg.id} className="p-3">
+                                                            <div className="flex justify-between items-center">
+                                                                <div>
+                                                                    <p className="font-medium text-gray-900">{reg.user?.full_name || 'Unknown'}</p>
+                                                                    <p className="text-xs text-gray-600">{reg.user?.email || 'N/A'}</p>
+                                                                </div>
+                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                    reg.status === 'registered' ? 'bg-purple-100 text-purple-700' :
+                                                                    reg.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                                    'bg-red-100 text-red-700'
+                                                                }`}>
+                                                                    {reg.status}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

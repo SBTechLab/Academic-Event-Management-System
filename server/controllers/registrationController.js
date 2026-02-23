@@ -69,17 +69,14 @@ const getEventRegistrations = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('registrations')
-            .select(`
-                *,
-                user:student_id(full_name, email),
-                event:event_id(id, title, date, time, location)
-            `)
+            .select('id, status, role_type, coordinator_permissions, rejection_reason, student_id, user:student_id(full_name, email)')
             .eq('event_id', eventId);
 
         if (error) {
             return res.status(400).json({ error: error.message });
         }
 
+        res.set('Cache-Control', 'public, max-age=30');
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
@@ -91,22 +88,17 @@ const getMyRegistrations = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('registrations')
-            .select(`
-                *,
-                event:event_id(title, date, time, location)
-            `)
+            .select('id, status, role_type, coordinator_permissions, rejection_reason, event_id, event:event_id(id, title, date, time, location, status)')
             .eq('student_id', req.user.id)
             .order('id', { ascending: false });
 
         if (error) {
-            console.error('Get my registrations error:', error);
             return res.status(400).json({ error: error.message });
         }
 
-        console.log('Registrations fetched:', data); // Debug log
+        res.set('Cache-Control', 'private, max-age=30');
         res.json(data);
     } catch (err) {
-        console.error('Server error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 };

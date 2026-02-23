@@ -16,7 +16,15 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// Cache control for static responses
+app.use((req, res, next) => {
+    if (req.method === 'GET') {
+        res.set('Cache-Control', 'public, max-age=30');
+    }
+    next();
+});
 
 // API Routes
 app.use('/api/users', userRoutes);

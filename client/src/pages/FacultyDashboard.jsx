@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { fetchWithCache } from '../cacheUtils';
 
 const FacultyDashboard = () => {
     const { user, getAuthHeaders } = useAuth();
@@ -14,6 +15,12 @@ const FacultyDashboard = () => {
     const [selectedPermissions, setSelectedPermissions] = useState([]);
     const [displayCount, setDisplayCount] = useState(10);
 
+    const isEventCompleted = (eventDate, eventTime) => {
+        const now = new Date();
+        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+        return eventDateTime < now;
+    };
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -21,32 +28,22 @@ const FacultyDashboard = () => {
     const fetchData = async () => {
         try {
             const headers = getAuthHeaders();
-
-            const eventsRes = await fetch('http://localhost:5001/api/events', { headers });
-
-            if (eventsRes.ok) {
-                const data = await eventsRes.json();
-                const facultyEvents = data.filter(e => e.created_by === user.id);
-                setMyEvents(facultyEvents);
-                
-                // Fetch coordinator requests for each faculty event
-                const allRequests = [];
-                for (const event of facultyEvents) {
-                    const reqRes = await fetch(`http://localhost:5001/api/registrations/event/${event.id}`, { headers });
-                    if (reqRes.ok) {
-                        const regs = await reqRes.json();
-                        const coordRequests = regs.filter(r => 
-                            r.role_type === 'coordinator' && 
-                            r.status === 'pending'
-                        );
-                        allRequests.push(...coordRequests);
-                    }
-                }
-                setPendingRequests(allRequests);
+            const eventsData = await fetchWithCache('http://localhost:5001/api/events?limit=50');
+            const facultyEvents = eventsData.filter(e => e.created_by === user.id);
+            setMyEvents(facultyEvents);
+            
+            if (facultyEvents.length > 0) {
+                const requestsPromises = facultyEvents.map(e => 
+                    fetch(`http://localhost:5001/api/registrations/event/${e.id}`, { headers })
+                        .then(r => r.ok ? r.json() : [])
+                        .catch(() => [])
+                );
+                const allRegs = (await Promise.all(requestsPromises)).flat();
+                setPendingRequests(allRegs.filter(r => r.role_type === 'coordinator' && r.status === 'pending'));
             }
+            setLoading(false);
         } catch (err) {
             console.error(err);
-        } finally {
             setLoading(false);
         }
     };
@@ -93,8 +90,8 @@ const FacultyDashboard = () => {
 
     if (loading)
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-600 text-lg">Loading dashboard...</p>
+            <div className="flex items-center justify-center h-screen">
+                <p className="text-lg">Loading...</p>
             </div>
         );
 
@@ -236,15 +233,26 @@ const FacultyDashboard = () => {
                     ) : (
                         <>
                         <div className="divide-y divide-gray-200">
-                            {myEvents.slice(0, displayCount).map(event => (
+                            {myEvents.slice(0, displayCount).map(event => {
+                                const isCompleted = isEventCompleted(event.date, event.time);
+                                return (
                                 <div
                                     key={event.id}
                                     className="py-4 flex justify-between items-center"
                                 >
-                                    <div>
-                                        <h4 className="font-medium text-gray-900">
-                                            {event.title}
-                                        </h4>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                            <h4 className="font-medium text-gray-900">
+                                                {event.title}
+                                            </h4>
+                                            {event.status === 'approved' && (
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                    isCompleted ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
+                                                }`}>
+                                                    {isCompleted ? '✓ Completed' : '📅 Upcoming'}
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-sm text-gray-600">
                                             {event.date} • {event.time}
                                         </p>
@@ -276,7 +284,7 @@ const FacultyDashboard = () => {
                                         </Link>
                                     </div>
                                 </div>
-                            ))}
+                            );})}
                         </div>
                         {myEvents.length > displayCount && (
                             <div className="flex justify-center mt-6 pt-6 border-t border-gray-200">

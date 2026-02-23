@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { fetchWithCache } from '../cacheUtils';
 
 const AdminDashboard = () => {
     const { user, getAuthHeaders } = useAuth();
@@ -17,46 +18,48 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [displayCount, setDisplayCount] = useState(10);
 
+    const isEventCompleted = (eventDate, eventTime) => {
+        const now = new Date();
+        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+        return eventDateTime < now;
+    };
+
     useEffect(() => {
         fetchDashboardData();
     }, []);
 
     const fetchDashboardData = async () => {
         try {
-            const [eventsRes, facultyRes] = await Promise.all([
-                fetch('http://localhost:5001/api/events', { headers: getAuthHeaders() }),
-                fetch('http://localhost:5001/api/users/faculty', { headers: getAuthHeaders() })
+            const [eventsData, facultyData] = await Promise.all([
+                fetchWithCache('http://localhost:5001/api/events?limit=50'),
+                fetch('http://localhost:5001/api/users/faculty', { headers: getAuthHeaders() }).then(r => r.json())
             ]);
 
-            if (eventsRes.ok) {
-                const eventsData = await eventsRes.json();
-                setEvents(eventsData);
-                
-                // Fetch all coordinator requests
-                let totalPendingCoords = 0;
-                for (const event of eventsData) {
-                    const regRes = await fetch(`http://localhost:5001/api/registrations/event/${event.id}`, { headers: getAuthHeaders() });
-                    if (regRes.ok) {
-                        const regs = await regRes.json();
-                        totalPendingCoords += regs.filter(r => r.role_type === 'coordinator' && r.status === 'pending').length;
-                    }
-                }
-                
-                setStats({
-                    totalEvents: eventsData.length,
-                    pendingEvents: eventsData.filter(e => e.status === 'pending').length,
-                    totalUsers: 50,
-                    pendingCoordinators: totalPendingCoords
-                });
-            }
-
-            if (facultyRes.ok) {
-                const facultyData = await facultyRes.json();
-                setFaculty(facultyData);
-            }
+            const sortedEvents = eventsData.sort((a, b) => {
+                if (a.status === 'pending' && b.status !== 'pending') return -1;
+                if (a.status !== 'pending' && b.status === 'pending') return 1;
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+            setEvents(sortedEvents);
+            setFaculty(facultyData);
+            
+            const regsPromises = eventsData.map(e => 
+                fetch(`http://localhost:5001/api/registrations/event/${e.id}`, { headers: getAuthHeaders() })
+                    .then(r => r.ok ? r.json() : [])
+                    .catch(() => [])
+            );
+            const allRegs = (await Promise.all(regsPromises)).flat();
+            const pendingCoords = allRegs.filter(r => r.role_type === 'coordinator' && r.status === 'pending').length;
+            
+            setStats({
+                totalEvents: eventsData.length,
+                pendingEvents: eventsData.filter(e => e.status === 'pending').length,
+                totalUsers: 50,
+                pendingCoordinators: pendingCoords
+            });
+            setLoading(false);
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-        } finally {
+            console.error(error);
             setLoading(false);
         }
     };
@@ -79,7 +82,7 @@ const AdminDashboard = () => {
     };
 
     if (loading) {
-        return <div className="flex justify-center items-center h-64">Loading...</div>;
+        return <div className="flex justify-center items-center h-screen">Loading...</div>;
     }
 
     return (
@@ -148,11 +151,22 @@ const AdminDashboard = () => {
                             <div className="space-y-6">
                                 {events.length > 0 ? (
                                     <>
-                                    {events.slice(0, displayCount).map((event) => (
+                                    {events.slice(0, displayCount).map((event) => {
+                                        const isCompleted = isEventCompleted(event.date, event.time);
+                                        return (
                                         <div key={event.id} className="bg-gray-50 border border-gray-200 rounded-xl p-6">
                                             <div className="flex justify-between">
                                                 <div className="flex-1">
-                                                    <h3 className="text-lg font-semibold text-gray-900">{event.title}</h3>
+                                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                        <h3 className="text-lg font-semibold text-gray-900">{event.title}</h3>
+                                                        {event.status === 'approved' && (
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                isCompleted ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
+                                                            }`}>
+                                                                {isCompleted ? '✓ Completed' : '📅 Upcoming'}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-gray-600 mt-2 line-clamp-2">{event.description}</p>
                                                     <div className="flex gap-6 text-sm text-gray-500 mt-4">
                                                         <span>📅 {event.date}</span>
@@ -185,7 +199,7 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    ))}
+                                    );})}
                                     {events.length > displayCount && (
                                         <div className="flex justify-center pt-6">
                                             <button

@@ -11,7 +11,6 @@ const CoordinatorDashboard = () => {
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
-    const [debugInfo, setDebugInfo] = useState('');
 
     useEffect(() => {
         fetchCoordinatorData();
@@ -32,25 +31,20 @@ const CoordinatorDashboard = () => {
 
     const fetchCoordinatorData = async () => {
         try {
-            setDebugInfo('Fetching event...');
             // Fetch event details
             const eventRes = await fetch(`http://localhost:5001/api/events/${eventId}`);
             if (eventRes.ok) {
                 const eventData = await eventRes.json();
                 setEvent(eventData);
-                setDebugInfo('Event loaded');
             }
 
-            setDebugInfo('Fetching registrations...');
             // Fetch coordinator permissions and participants
             const regRes = await fetch(`http://localhost:5001/api/registrations/event/${eventId}`, {
                 headers: getAuthHeaders()
             });
             if (regRes.ok) {
                 const regs = await regRes.json();
-                console.log('All registrations:', regs);
                 setParticipants(regs);
-                setDebugInfo(`Found ${regs.length} registrations`);
                 
                 // Fetch my registrations to find coordinator permissions
                 const myRegRes = await fetch('http://localhost:5001/api/registrations/my-registrations', {
@@ -58,8 +52,6 @@ const CoordinatorDashboard = () => {
                 });
                 if (myRegRes.ok) {
                     const myRegs = await myRegRes.json();
-                    console.log('My registrations:', myRegs);
-                    setDebugInfo(`My registrations: ${myRegs.length}`);
                     
                     // Find coordinator registration for this event
                     const myCoordReg = myRegs.find(r => 
@@ -68,30 +60,16 @@ const CoordinatorDashboard = () => {
                         r.status === 'registered'
                     );
                     
-                    console.log('My coordinator registration:', myCoordReg);
-                    
-                    if (myCoordReg) {
-                        setDebugInfo('Found coordinator registration');
-                        if (myCoordReg.coordinator_permissions) {
-                            console.log('Permissions:', myCoordReg.coordinator_permissions);
-                            const perms = Array.isArray(myCoordReg.coordinator_permissions) 
-                                ? myCoordReg.coordinator_permissions 
-                                : [];
-                            setPermissions(perms);
-                            setDebugInfo(`Permissions loaded: ${perms.length}`);
-                        } else {
-                            setDebugInfo('No permissions in registration');
-                            setPermissions([]);
-                        }
-                    } else {
-                        setDebugInfo('No coordinator registration found for this event');
-                        setPermissions([]);
+                    if (myCoordReg && myCoordReg.coordinator_permissions) {
+                        const perms = Array.isArray(myCoordReg.coordinator_permissions) 
+                            ? myCoordReg.coordinator_permissions 
+                            : [];
+                        setPermissions(perms);
                     }
                 }
             }
         } catch (error) {
             console.error('Error fetching coordinator data:', error);
-            setDebugInfo(`Error: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -125,40 +103,43 @@ const CoordinatorDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 p-6">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <button onClick={() => navigate('/my-events')} className="text-blue-600 hover:text-blue-800 mb-4">
+                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                    <button onClick={() => navigate('/my-events')} className="text-blue-600 hover:text-blue-800 mb-4 font-medium flex items-center gap-2">
                         ← Back to My Events
                     </button>
-                    <h1 className="text-4xl font-bold text-gray-800">Coordinator Dashboard</h1>
-                    <h2 className="text-2xl text-gray-600 mt-2">{event.title}</h2>
-                    <div className="flex gap-6 text-sm text-gray-600 mt-3">
-                        <span>📅 {event.date}</span>
-                        <span>🕐 {event.time}</span>
-                        <span>📍 {event.location}</span>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Coordinator Dashboard</h1>
+                            <h2 className="text-2xl text-gray-700 mt-2 font-semibold">{event.title}</h2>
+                            <div className="flex gap-6 text-sm text-gray-600 mt-3">
+                                <span className="flex items-center gap-1">📅 {event.date}</span>
+                                <span className="flex items-center gap-1">🕐 {event.time}</span>
+                                <span className="flex items-center gap-1">📍 {event.location}</span>
+                            </div>
+                        </div>
+                        <div className="hidden md:block">
+                            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">
+                                ⭐
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Debug Info */}
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                    <p className="text-sm text-yellow-800">Debug: {debugInfo}</p>
-                    <p className="text-xs text-yellow-600 mt-1">Event ID: {eventId}</p>
-                    <p className="text-xs text-yellow-600">Permissions: {JSON.stringify(permissions)}</p>
-                    <p className="text-xs text-yellow-600">Participants: {participants.length}</p>
-                </div>
-
                 {/* Permissions Overview */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">Your Permissions</h3>
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl shadow-xl p-6 text-white">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span>🔑</span> Your Permissions
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                         {permissions.length === 0 ? (
-                            <p className="text-gray-500">No permissions granted yet</p>
+                            <p className="text-blue-100">No permissions granted yet. Contact faculty for access.</p>
                         ) : (
                             permissions.map(perm => (
-                                <span key={perm} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                                    {perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                <span key={perm} className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg text-sm font-medium border border-white/30">
+                                    ✓ {perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </span>
                             ))
                         )}
@@ -167,61 +148,82 @@ const CoordinatorDashboard = () => {
 
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded-xl shadow-lg">
-                        <p className="text-sm text-gray-500">Total Participants</p>
-                        <p className="text-4xl font-bold text-gray-900 mt-2">
-                            {participants.filter(p => p.role_type === 'participant').length}
-                        </p>
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium">Total Participants</p>
+                                <p className="text-4xl font-bold text-gray-900 mt-2">
+                                    {participants.filter(p => p.role_type === 'participant').length}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">
+                                👥
+                            </div>
+                        </div>
                     </div>
-                    <div className="bg-white p-6 rounded-xl shadow-lg">
-                        <p className="text-sm text-gray-500">Attended</p>
-                        <p className="text-4xl font-bold text-green-600 mt-2">
-                            {participants.filter(p => p.status === 'attended').length}
-                        </p>
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium">Attended</p>
+                                <p className="text-4xl font-bold text-green-600 mt-2">
+                                    {participants.filter(p => p.status === 'attended').length}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">
+                                ✓
+                            </div>
+                        </div>
                     </div>
-                    <div className="bg-white p-6 rounded-xl shadow-lg">
-                        <p className="text-sm text-gray-500">Registered</p>
-                        <p className="text-4xl font-bold text-blue-600 mt-2">
-                            {participants.filter(p => p.status === 'registered' && p.role_type === 'participant').length}
-                        </p>
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium">Registered</p>
+                                <p className="text-4xl font-bold text-blue-600 mt-2">
+                                    {participants.filter(p => p.status === 'registered' && p.role_type === 'participant').length}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">
+                                📝
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div className="flex border-b">
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                    <div className="flex border-b border-gray-200 bg-gray-50">
                         <button
                             onClick={() => setActiveTab('overview')}
-                            className={`flex-1 py-4 font-medium transition ${
-                                activeTab === 'overview' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50' : 'text-gray-500 hover:text-gray-700'
+                            className={`flex-1 py-4 px-6 font-semibold transition ${
+                                activeTab === 'overview' ? 'text-blue-600 border-b-3 border-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                             }`}>
-                            Overview
+                            📊 Overview
                         </button>
                         {hasPermission('view_participants') && (
                             <button
                                 onClick={() => setActiveTab('participants')}
-                                className={`flex-1 py-4 font-medium transition ${
-                                    activeTab === 'participants' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50' : 'text-gray-500 hover:text-gray-700'
+                                className={`flex-1 py-4 px-6 font-semibold transition ${
+                                    activeTab === 'participants' ? 'text-blue-600 border-b-3 border-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                                 }`}>
-                                Participants
+                                👥 Participants
                             </button>
                         )}
                         {hasPermission('mark_attendance') && (
                             <button
                                 onClick={() => setActiveTab('attendance')}
-                                className={`flex-1 py-4 font-medium transition ${
-                                    activeTab === 'attendance' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50' : 'text-gray-500 hover:text-gray-700'
+                                className={`flex-1 py-4 px-6 font-semibold transition ${
+                                    activeTab === 'attendance' ? 'text-blue-600 border-b-3 border-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                                 }`}>
-                                Attendance
+                                ✓ Attendance
                             </button>
                         )}
                         {hasPermission('manage_event_details') && (
                             <button
                                 onClick={() => setActiveTab('details')}
-                                className={`flex-1 py-4 font-medium transition ${
-                                    activeTab === 'details' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50' : 'text-gray-500 hover:text-gray-700'
+                                className={`flex-1 py-4 px-6 font-semibold transition ${
+                                    activeTab === 'details' ? 'text-blue-600 border-b-3 border-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                                 }`}>
-                                Event Details
+                                📝 Event Details
                             </button>
                         )}
                     </div>
