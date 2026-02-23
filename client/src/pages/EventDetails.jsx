@@ -188,6 +188,7 @@ const EventDetails = () => {
                                     <div>
                                         <span className="font-medium text-gray-700">Status:</span>
                                         <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                                            event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                                             event.status === 'approved' ? 'bg-green-100 text-green-800' :
                                             event.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                             'bg-red-100 text-red-800'
@@ -260,6 +261,23 @@ const EventDetails = () => {
                                             </button>
                                         </>
                                     )}
+                                    {(event.status === 'approved' || event.status === 'rejected') && event.status !== 'cancelled' && (
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm('Delete this event? This will cancel it for all participants.')) {
+                                                    await fetch(`http://localhost:5001/api/events/${id}`, {
+                                                        method: 'PUT',
+                                                        headers: getAuthHeaders(),
+                                                        body: JSON.stringify({ status: 'cancelled' })
+                                                    });
+                                                    fetchEvent();
+                                                }
+                                            }}
+                                            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                                        >
+                                            Delete Event
+                                        </button>
+                                    )}
                                 </>
                             ) : role === 'faculty' ? (
                                 <button
@@ -271,7 +289,13 @@ const EventDetails = () => {
                             ) : isRegistered ? (
                                 <div className="bg-green-50 border border-green-200 rounded-lg px-6 py-3">
                                     <p className="text-green-800 font-medium">
-                                        ✓ Registered for this Event
+                                        {event.status === 'cancelled' ? '❌ Event Cancelled' : '✓ Registered for this Event'}
+                                    </p>
+                                </div>
+                            ) : event.status === 'cancelled' ? (
+                                <div className="bg-red-50 border border-red-200 rounded-lg px-6 py-3">
+                                    <p className="text-red-800 font-medium">
+                                        ❌ Event Cancelled
                                     </p>
                                 </div>
                             ) : (

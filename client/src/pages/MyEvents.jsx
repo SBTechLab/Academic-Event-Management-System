@@ -6,6 +6,7 @@ const MyEvents = () => {
     const { getAuthHeaders } = useAuth();
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [displayCount, setDisplayCount] = useState(10);
 
     useEffect(() => {
         fetchMyEvents();
@@ -48,8 +49,9 @@ const MyEvents = () => {
                         </Link>
                     </div>
                 ) : (
+                    <>
                     <div className="grid grid-cols-1 gap-6">
-                        {registrations.map((reg) => (
+                        {registrations.slice(0, displayCount).map((reg) => (
                             <div key={reg.id} className="bg-white rounded-xl shadow-lg p-6">
                                 <div className="flex justify-between items-start">
                                     <div className="flex-1">
@@ -72,12 +74,14 @@ const MyEvents = () => {
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-medium text-gray-700">Status:</span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                                reg.event?.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                                                 reg.status === 'registered' ? 'bg-green-100 text-green-700' :
                                                 reg.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                                                 reg.status === 'rejected' ? 'bg-red-100 text-red-700' :
                                                 'bg-gray-100 text-gray-700'
                                             }`}>
-                                                {reg.status === 'registered' ? '✓ Confirmed' :
+                                                {reg.event?.status === 'cancelled' ? '❌ Cancelled' :
+                                                 reg.status === 'registered' ? '✓ Confirmed' :
                                                  reg.status === 'pending' ? '⏳ Pending Approval' :
                                                  reg.status === 'rejected' ? '✗ Rejected' :
                                                  reg.status}
@@ -100,7 +104,7 @@ const MyEvents = () => {
                                             View Event
                                         </Link>
                                         
-                                        {reg.role_type === 'coordinator' && reg.status === 'registered' && (
+                                        {reg.role_type === 'coordinator' && reg.status === 'registered' && reg.event?.status !== 'cancelled' && (
                                             <Link
                                                 to={`/coordinator/event/${reg.event_id}`}
                                                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium text-center"
@@ -113,6 +117,17 @@ const MyEvents = () => {
                             </div>
                         ))}
                     </div>
+                    {registrations.length > displayCount && (
+                        <div className="text-center mt-6">
+                            <button
+                                onClick={() => setDisplayCount(prev => prev + 10)}
+                                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                            >
+                                Show More ({registrations.length - displayCount} remaining)
+                            </button>
+                        </div>
+                    )}
+                    </>
                 )}
             </div>
         </div>

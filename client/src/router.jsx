@@ -11,7 +11,9 @@ import CreateEvent from './pages/CreateEvent';
 import EditEvent from './pages/EditEvent';
 import Events from './pages/Events';
 import CoordinatorRequests from './pages/CoordinatorRequests';
+import CoordinatorReview from './pages/CoordinatorReview';
 import MyEvents from './pages/MyEvents';
+import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -69,12 +71,20 @@ const router = createBrowserRouter([
                 element: <AdminDashboard />,
             },
             {
+                path: '/coordinator-review/:id',
+                element: <CoordinatorReview />,
+            },
+            {
                 path: '/coordinator-requests',
                 element: <CoordinatorRequests />,
             },
             {
                 path: '/my-events',
                 element: <MyEvents />,
+            },
+            {
+                path: '/coordinator/event/:eventId',
+                element: <CoordinatorDashboard />,
             },
             {
                 path: '/events/:id/edit',

@@ -9,6 +9,7 @@ const StudentDashboard = () => {
     const [selectedType, setSelectedType] = useState('all');
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [displayCount, setDisplayCount] = useState(10);
 
     const eventTypes = [
         { value: 'all', label: 'All Events', icon: '🎯' },
@@ -59,9 +60,9 @@ const StudentDashboard = () => {
 
     const filterEvents = () => {
         if (selectedType === 'all') {
-            setFilteredEvents(allEvents.slice(0, 6));
+            setFilteredEvents(allEvents);
         } else {
-            setFilteredEvents(allEvents.filter(e => e.event_type === selectedType).slice(0, 6));
+            setFilteredEvents(allEvents.filter(e => e.event_type === selectedType));
         }
     };
 
@@ -122,17 +123,18 @@ const StudentDashboard = () => {
 
                 {/* Upcoming Events */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold text-gray-800">
                             {selectedType === 'all' ? 'All Events' : `${eventTypes.find(t => t.value === selectedType)?.label} Events`}
                         </h2>
-                        <Link to="/events" className="text-blue-600 hover:text-blue-800 font-medium">
-                            View All →
-                        </Link>
+                        <div className="text-sm text-gray-600">
+                            Showing {Math.min(displayCount, filteredEvents.length)} of {filteredEvents.length} events
+                        </div>
                     </div>
                     {filteredEvents.length > 0 ? (
+                        <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {filteredEvents.map((event) => (
+                            {filteredEvents.slice(0, displayCount).map((event) => (
                                 <div key={event.id} className="bg-gray-50 rounded-lg p-5 border border-gray-200 hover:shadow-md transition">
                                     <div className="flex items-start justify-between mb-2">
                                         <h3 className="font-semibold text-lg text-gray-800">{event.title}</h3>
@@ -153,6 +155,17 @@ const StudentDashboard = () => {
                                 </div>
                             ))}
                         </div>
+                        {filteredEvents.length > displayCount && (
+                            <div className="flex justify-center mt-6">
+                                <button
+                                    onClick={() => setDisplayCount(prev => prev + 10)}
+                                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg hover:from-blue-700 hover:to-teal-700 transition font-semibold shadow-md"
+                                >
+                                    Load More Events ({filteredEvents.length - displayCount} remaining)
+                                </button>
+                            </div>
+                        )}
+                        </>
                     ) : (
                         <p className="text-gray-600 text-center py-8">No {selectedType !== 'all' ? selectedType : ''} events available at the moment</p>
                     )}

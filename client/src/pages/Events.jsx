@@ -7,6 +7,7 @@ const Events = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [displayCount, setDisplayCount] = useState(10);
 
     const isEventCompleted = (eventDate, eventTime) => {
         const now = new Date();
@@ -15,6 +16,9 @@ const Events = () => {
     };
 
     const getEventStatus = (event) => {
+        if (event.status === 'cancelled') {
+            return 'cancelled';
+        }
         if (event.status === 'approved' && isEventCompleted(event.date, event.time)) {
             return 'completed';
         }
@@ -30,7 +34,7 @@ const Events = () => {
 
                 const filteredEvents =
                     role === 'student' || role === 'student_coordinator'
-                        ? data.filter(e => e.status === 'approved')
+                        ? data.filter(e => e.status === 'approved' || e.status === 'cancelled')
                         : data;
 
                 setEvents(filteredEvents);
@@ -57,8 +61,9 @@ const Events = () => {
                         <p className="text-gray-600 text-lg">No upcoming events found.</p>
                     </div>
                 ) : (
-                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                        {events.map(event => {
+                    <>
+                        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                            {events.slice(0, displayCount).map(event => {
                             const displayStatus = getEventStatus(event);
                             return (
                                 <div key={event.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition duration-300">
@@ -70,6 +75,7 @@ const Events = () => {
                                         <div className="flex justify-between items-start mb-3">
                                             <h3 className="text-xl font-semibold text-gray-900">{event.title}</h3>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                displayStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
                                                 displayStatus === 'completed' ? 'bg-gray-100 text-gray-700' :
                                                 displayStatus === 'approved' ? 'bg-green-100 text-green-700' :
                                                 displayStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
@@ -89,15 +95,31 @@ const Events = () => {
 
                                         <Link
                                             to={`/events/${event.id}`}
-                                            className="block text-center bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-medium"
+                                            className={`block text-center py-2.5 rounded-lg transition font-medium ${
+                                                displayStatus === 'cancelled' 
+                                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            }`}
+                                            onClick={(e) => displayStatus === 'cancelled' && e.preventDefault()}
                                         >
-                                            View Details
+                                            {displayStatus === 'cancelled' ? 'Event Cancelled' : 'View Details'}
                                         </Link>
                                     </div>
                                 </div>
                             );
                         })}
-                    </div>
+                        </div>
+                        {events.length > displayCount && (
+                            <div className="text-center mt-8">
+                                <button
+                                    onClick={() => setDisplayCount(prev => prev + 10)}
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                                >
+                                    Show More ({events.length - displayCount} remaining)
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

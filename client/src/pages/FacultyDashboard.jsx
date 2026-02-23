@@ -10,6 +10,9 @@ const FacultyDashboard = () => {
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [selectedPermissions, setSelectedPermissions] = useState([]);
+    const [displayCount, setDisplayCount] = useState(10);
 
     useEffect(() => {
         fetchData();
@@ -48,11 +51,14 @@ const FacultyDashboard = () => {
         }
     };
 
-    const handleRequestAction = async (requestId, status) => {
+    const handleRequestAction = async (requestId, status, permissions = []) => {
         try {
             const body = { status };
             if (status === 'rejected' && rejectionReason) {
                 body.rejection_reason = rejectionReason;
+            }
+            if (status === 'registered' && permissions.length > 0) {
+                body.coordinator_permissions = permissions;
             }
             
             const response = await fetch(
@@ -66,13 +72,23 @@ const FacultyDashboard = () => {
 
             if (response.ok) {
                 setShowRejectModal(false);
+                setShowDetailsModal(false);
                 setRejectionReason('');
                 setSelectedRequest(null);
+                setSelectedPermissions([]);
                 fetchData();
             }
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const togglePermission = (permission) => {
+        setSelectedPermissions(prev => 
+            prev.includes(permission)
+                ? prev.filter(p => p !== permission)
+                : [...prev, permission]
+        );
     };
 
     if (loading)
@@ -95,6 +111,21 @@ const FacultyDashboard = () => {
                         Welcome back, <span className="font-medium">{user?.full_name}</span>
                     </p>
                 </div>
+
+                {/* PENDING REQUESTS ALERT */}
+                {pendingRequests.length > 0 && (
+                    <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl shadow-lg p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-bold">⚠️ {pendingRequests.length} Pending Coordinator Request{pendingRequests.length > 1 ? 's' : ''}</h2>
+                                <p className="text-orange-100 mt-1">Students waiting for approval</p>
+                            </div>
+                            <a href="#pending-requests" className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition">
+                                Review Now
+                            </a>
+                        </div>
+                    </div>
+                )}
 
                 {/* STATS SECTION */}
                 <div className="grid gap-6 md:grid-cols-3">
@@ -143,7 +174,7 @@ const FacultyDashboard = () => {
 
                 {/* REQUESTS SECTION */}
                 {pendingRequests.length > 0 && (
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div id="pending-requests" className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                         <h2 className="text-xl font-semibold text-gray-900 mb-6">
                             Pending Coordinator Requests
                         </h2>
@@ -170,21 +201,14 @@ const FacultyDashboard = () => {
 
                                         <div className="flex gap-3">
                                             <button
-                                                onClick={() =>
-                                                    handleRequestAction(request.id, 'registered')
-                                                }
-                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
-                                            >
-                                                Approve
-                                            </button>
-                                            <button
                                                 onClick={() => {
                                                     setSelectedRequest(request);
-                                                    setShowRejectModal(true);
+                                                    setSelectedPermissions([]);
+                                                    setShowDetailsModal(true);
                                                 }}
-                                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium"
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
                                             >
-                                                Reject
+                                                See Details
                                             </button>
                                         </div>
                                     </div>
@@ -196,17 +220,23 @@ const FacultyDashboard = () => {
 
                 {/* RECENT EVENTS */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                        My Recent Events
-                    </h2>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            My Recent Events
+                        </h2>
+                        <div className="text-sm text-gray-600">
+                            Showing {Math.min(displayCount, myEvents.length)} of {myEvents.length} events
+                        </div>
+                    </div>
 
                     {myEvents.length === 0 ? (
                         <p className="text-gray-500 text-center py-10">
                             You haven't created any events yet.
                         </p>
                     ) : (
+                        <>
                         <div className="divide-y divide-gray-200">
-                            {myEvents.slice(0, 5).map(event => (
+                            {myEvents.slice(0, displayCount).map(event => (
                                 <div
                                     key={event.id}
                                     className="py-4 flex justify-between items-center"
@@ -248,6 +278,17 @@ const FacultyDashboard = () => {
                                 </div>
                             ))}
                         </div>
+                        {myEvents.length > displayCount && (
+                            <div className="flex justify-center mt-6 pt-6 border-t border-gray-200">
+                                <button
+                                    onClick={() => setDisplayCount(prev => prev + 10)}
+                                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-semibold shadow-md"
+                                >
+                                    Load More Events ({myEvents.length - displayCount} remaining)
+                                </button>
+                            </div>
+                        )}
+                        </>
                     )}
                 </div>
 
@@ -295,6 +336,163 @@ const FacultyDashboard = () => {
                                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
                             >
                                 Reject Request
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Coordinator Details & Permissions Modal */}
+            {showDetailsModal && selectedRequest && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 animate-fadeIn max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">Coordinator Request Details</h3>
+                            <button
+                                onClick={() => {
+                                    setShowDetailsModal(false);
+                                    setSelectedRequest(null);
+                                    setSelectedPermissions([]);
+                                }}
+                                className="text-gray-400 hover:text-gray-600 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Student Details */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <h4 className="font-semibold text-blue-900 mb-3">Student Information</h4>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Name:</span>
+                                    <span className="font-medium text-gray-900">{selectedRequest.user?.full_name}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Email:</span>
+                                    <span className="font-medium text-gray-900">{selectedRequest.user?.email}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Event:</span>
+                                    <span className="font-medium text-gray-900">{selectedRequest.event?.title}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Permissions Selection */}
+                        <div className="mb-6">
+                            <h4 className="font-semibold text-gray-900 mb-3">Grant Coordinator Permissions</h4>
+                            <p className="text-sm text-gray-600 mb-4">Select the permissions you want to grant to this coordinator:</p>
+                            
+                            <div className="space-y-3">
+                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPermissions.includes('mark_attendance')}
+                                        onChange={() => togglePermission('mark_attendance')}
+                                        className="mt-1 mr-3"
+                                    />
+                                    <div>
+                                        <div className="font-medium text-gray-900">✅ Mark Attendance</div>
+                                        <div className="text-sm text-gray-600">Allow coordinator to mark participant attendance</div>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPermissions.includes('view_participants')}
+                                        onChange={() => togglePermission('view_participants')}
+                                        className="mt-1 mr-3"
+                                    />
+                                    <div>
+                                        <div className="font-medium text-gray-900">👥 View Participants</div>
+                                        <div className="text-sm text-gray-600">View list of all registered participants</div>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPermissions.includes('manage_event_details')}
+                                        onChange={() => togglePermission('manage_event_details')}
+                                        className="mt-1 mr-3"
+                                    />
+                                    <div>
+                                        <div className="font-medium text-gray-900">✏️ Manage Event Details</div>
+                                        <div className="text-sm text-gray-600">Edit event information and details</div>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPermissions.includes('send_announcements')}
+                                        onChange={() => togglePermission('send_announcements')}
+                                        className="mt-1 mr-3"
+                                    />
+                                    <div>
+                                        <div className="font-medium text-gray-900">📢 Send Announcements</div>
+                                        <div className="text-sm text-gray-600">Send notifications to participants</div>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPermissions.includes('generate_reports')}
+                                        onChange={() => togglePermission('generate_reports')}
+                                        className="mt-1 mr-3"
+                                    />
+                                    <div>
+                                        <div className="font-medium text-gray-900">📊 Generate Reports</div>
+                                        <div className="text-sm text-gray-600">Generate attendance and participation reports</div>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPermissions.includes('manage_registrations')}
+                                        onChange={() => togglePermission('manage_registrations')}
+                                        className="mt-1 mr-3"
+                                    />
+                                    <div>
+                                        <div className="font-medium text-gray-900">📋 Manage Registrations</div>
+                                        <div className="text-sm text-gray-600">Approve or cancel participant registrations</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDetailsModal(false);
+                                    setSelectedRequest(null);
+                                    setSelectedPermissions([]);
+                                }}
+                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setSelectedRequest(selectedRequest);
+                                    setShowRejectModal(true);
+                                    setShowDetailsModal(false);
+                                }}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                            >
+                                Reject
+                            </button>
+                            <button
+                                onClick={() => handleRequestAction(selectedRequest.id, 'registered', selectedPermissions)}
+                                disabled={selectedPermissions.length === 0}
+                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Approve with Permissions
                             </button>
                         </div>
                     </div>

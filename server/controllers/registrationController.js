@@ -114,12 +114,15 @@ const getMyRegistrations = async (req, res) => {
 // Update registration status (Coordinator/Faculty)
 const updateRegistrationStatus = async (req, res) => {
     const { id } = req.params;
-    const { status, rejection_reason } = req.body;
+    const { status, rejection_reason, coordinator_permissions } = req.body;
 
     try {
         const updateData = { status };
         if (rejection_reason) {
             updateData.rejection_reason = rejection_reason;
+        }
+        if (coordinator_permissions) {
+            updateData.coordinator_permissions = coordinator_permissions;
         }
         
         const { data, error } = await supabase

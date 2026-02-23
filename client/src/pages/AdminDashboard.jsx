@@ -8,12 +8,14 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState({
         totalEvents: 0,
         pendingEvents: 0,
-        totalUsers: 0
+        totalUsers: 0,
+        pendingCoordinators: 0
     });
     const [activeTab, setActiveTab] = useState('overview');
     const [events, setEvents] = useState([]);
     const [faculty, setFaculty] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [displayCount, setDisplayCount] = useState(10);
 
     useEffect(() => {
         fetchDashboardData();
@@ -29,10 +31,22 @@ const AdminDashboard = () => {
             if (eventsRes.ok) {
                 const eventsData = await eventsRes.json();
                 setEvents(eventsData);
+                
+                // Fetch all coordinator requests
+                let totalPendingCoords = 0;
+                for (const event of eventsData) {
+                    const regRes = await fetch(`http://localhost:5001/api/registrations/event/${event.id}`, { headers: getAuthHeaders() });
+                    if (regRes.ok) {
+                        const regs = await regRes.json();
+                        totalPendingCoords += regs.filter(r => r.role_type === 'coordinator' && r.status === 'pending').length;
+                    }
+                }
+                
                 setStats({
                     totalEvents: eventsData.length,
                     pendingEvents: eventsData.filter(e => e.status === 'pending').length,
-                    totalUsers: 50
+                    totalUsers: 50,
+                    pendingCoordinators: totalPendingCoords
                 });
             }
 
@@ -85,7 +99,7 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
                         <p className="text-sm text-gray-500">Total Events</p>
                         <p className="text-4xl font-bold text-gray-900 mt-2">{stats.totalEvents}</p>
@@ -97,6 +111,10 @@ const AdminDashboard = () => {
                     <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
                         <p className="text-sm text-gray-500">Total Faculty</p>
                         <p className="text-4xl font-bold text-gray-900 mt-2">{faculty.length}</p>
+                    </div>
+                    <div className="bg-white border border-orange-300 p-6 rounded-2xl shadow-sm">
+                        <p className="text-sm text-orange-600 font-semibold">⚠️ Pending Coordinators</p>
+                        <p className="text-4xl font-bold text-orange-600 mt-2">{stats.pendingCoordinators}</p>
                     </div>
                 </div>
 
@@ -120,9 +138,17 @@ const AdminDashboard = () => {
 
                     <div className="p-8">
                         {activeTab === 'overview' && (
+                            <>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-800">All Events</h3>
+                                <div className="text-sm text-gray-600">
+                                    Showing {Math.min(displayCount, events.length)} of {events.length} events
+                                </div>
+                            </div>
                             <div className="space-y-6">
                                 {events.length > 0 ? (
-                                    events.map((event) => (
+                                    <>
+                                    {events.slice(0, displayCount).map((event) => (
                                         <div key={event.id} className="bg-gray-50 border border-gray-200 rounded-xl p-6">
                                             <div className="flex justify-between">
                                                 <div className="flex-1">
@@ -159,11 +185,23 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    ))
+                                    ))}
+                                    {events.length > displayCount && (
+                                        <div className="flex justify-center pt-6">
+                                            <button
+                                                onClick={() => setDisplayCount(prev => prev + 10)}
+                                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold shadow-md"
+                                            >
+                                                Load More Events ({events.length - displayCount} remaining)
+                                            </button>
+                                        </div>
+                                    )}
+                                    </>
                                 ) : (
                                     <p className="text-gray-500 text-center py-8">No events found</p>
                                 )}
                             </div>
+                            </>
                         )}
 
                         {activeTab === 'faculty' && (
