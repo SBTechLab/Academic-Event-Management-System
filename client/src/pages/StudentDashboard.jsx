@@ -3,176 +3,173 @@ import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { fetchWithCache } from '../cacheUtils';
 
+const PAGE_SIZE = 6;
+
+const eventTypes = [
+    { value: 'all',         label: 'All',         icon: '🎯' },
+    { value: 'technical',   label: 'Technical',   icon: '💻' },
+    { value: 'cultural',    label: 'Cultural',    icon: '🎭' },
+    { value: 'sports',      label: 'Sports',      icon: '⚽' },
+    { value: 'workshop',    label: 'Workshop',    icon: '🛠️' },
+    { value: 'seminar',     label: 'Seminar',     icon: '📚' },
+    { value: 'competition', label: 'Competition', icon: '🏆' },
+    { value: 'general',     label: 'General',     icon: '📌' },
+];
+
+const typeIcon = (t) => ({ technical: '💻', cultural: '🎭', sports: '⚽', workshop: '🛠️', seminar: '📚', competition: '🏆' }[t] || '🎯');
+
 const StudentDashboard = () => {
     const { user, getAuthHeaders } = useAuth();
     const [allEvents, setAllEvents] = useState([]);
-    const [filteredEvents, setFilteredEvents] = useState([]);
-    const [selectedType, setSelectedType] = useState('all');
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [displayCount, setDisplayCount] = useState(10);
+    const [selectedType, setSelectedType] = useState('all');
+    const [page, setPage] = useState(1);
 
-    const isEventCompleted = (eventDate, eventTime) => {
-        const now = new Date();
-        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
-        return eventDateTime < now;
-    };
-
-    const eventTypes = [
-        { value: 'all', label: 'All Events', icon: '🎯' },
-        { value: 'technical', label: 'Technical', icon: '💻' },
-        { value: 'cultural', label: 'Cultural', icon: '🎭' },
-        { value: 'sports', label: 'Sports', icon: '⚽' },
-        { value: 'workshop', label: 'Workshop', icon: '🛠️' },
-        { value: 'seminar', label: 'Seminar', icon: '📚' },
-        { value: 'competition', label: 'Competition', icon: '🏆' },
-        { value: 'general', label: 'General', icon: '📌' }
-    ];
+    const isCompleted = (date, time) => new Date(`${date}T${time}`) < new Date();
 
     useEffect(() => {
-        fetchDashboardData();
+        const fetchData = async () => {
+            try {
+                const [eventsData, regData] = await Promise.all([
+                    fetchWithCache('http://localhost:5001/api/events?limit=50'),
+                    fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
+                ]);
+                setAllEvents(eventsData.filter(e => e.status === 'approved'));
+                setRegistrations(Array.isArray(regData) ? regData : []);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
-    useEffect(() => {
-        filterEvents();
-    }, [selectedType, allEvents]);
+    if (loading) return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
 
-    const fetchDashboardData = async () => {
-        try {
-            const [eventsData, regData] = await Promise.all([
-                fetchWithCache('http://localhost:5001/api/events?limit=50'),
-                fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
-            ]);
-            setAllEvents(eventsData.filter(e => e.status === 'approved'));
-            setRegistrations(regData);
-            setLoading(false);
-        } catch (error) {
-            console.error(error);
-            setLoading(false);
-        }
-    };
+    const filtered = selectedType === 'all' ? allEvents : allEvents.filter(e => e.event_type === selectedType);
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const pageEvents = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-    const filterEvents = () => {
-        if (selectedType === 'all') {
-            setFilteredEvents(allEvents);
-        } else {
-            setFilteredEvents(allEvents.filter(e => e.event_type === selectedType));
-        }
-    };
-
-
-
-    if (loading) {
-        return <div className="flex justify-center items-center h-screen">Loading...</div>;
-    }
+    const handleTypeChange = (type) => { setSelectedType(type); setPage(1); };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100 p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h1 className="text-4xl font-bold text-gray-800">Student Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Welcome, {user?.full_name}</p>
-                    <Link to="/my-events" className="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium">
-                        View My Events →
-                    </Link>
+        <div className="space-y-6">
+            {/* Welcome */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user?.full_name} 👋</h1>
+                <p className="text-gray-500 text-sm mt-1">Here's what's happening with events today.</p>
+                <Link to="/my-events" className="inline-block mt-3 text-sm font-semibold" style={{ color: '#0061ff' }}>
+                    View My Registrations →
+                </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4">
+                <div className="text-white p-5 rounded-xl shadow" style={{ background: '#0061ff' }}>
+                    <p className="text-blue-100 text-sm font-medium">Available Events</p>
+                    <p className="text-4xl font-bold mt-1">{allEvents.length}</p>
+                </div>
+                <div className="text-white p-5 rounded-xl shadow" style={{ background: '#0050d0' }}>
+                    <p className="text-blue-100 text-sm font-medium">My Registrations</p>
+                    <p className="text-4xl font-bold mt-1">{registrations.length}</p>
+                </div>
+                <div className="text-white p-5 rounded-xl shadow" style={{ background: '#003fa3' }}>
+                    <p className="text-blue-100 text-sm font-medium">Attended</p>
+                    <p className="text-4xl font-bold mt-1">{registrations.filter(r => r.status === 'attended').length}</p>
+                </div>
+            </div>
+
+            {/* Filter */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div className="flex flex-wrap gap-2">
+                    {eventTypes.map(t => (
+                        <button key={t.value} onClick={() => handleTypeChange(t.value)}
+                            style={selectedType === t.value ? { background: '#0061ff' } : {}}
+                            className={`px-4 py-2 rounded-lg text-base font-semibold transition ${
+                                selectedType === t.value ? 'text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}>
+                            {t.icon} {t.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Events Grid */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">
+                        {selectedType === 'all' ? 'All Events' : `${eventTypes.find(t => t.value === selectedType)?.label} Events`}
+                    </h2>
+                    <span className="text-sm text-gray-400">
+                        {filtered.length} events · Page {page} of {totalPages || 1}
+                    </span>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-6 rounded-xl shadow-lg">
-                        <p className="text-teal-100 text-sm font-medium">Available Events</p>
-                        <p className="text-4xl font-bold mt-2">{allEvents.length}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
-                        <p className="text-green-100 text-sm font-medium">My Registrations</p>
-                        <p className="text-4xl font-bold mt-2">{registrations.length}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
-                        <p className="text-blue-100 text-sm font-medium">Attended Events</p>
-                        <p className="text-4xl font-bold mt-2">
-                            {registrations.filter(r => r.status === 'attended').length}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Event Type Filter */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Explore Events by Type</h2>
-                    <div className="flex flex-wrap gap-3">
-                        {eventTypes.map(type => (
-                            <button
-                                key={type.value}
-                                onClick={() => setSelectedType(type.value)}
-                                className={`px-4 py-2 rounded-lg font-medium transition ${
-                                    selectedType === type.value
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                            >
-                                {type.icon} {type.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Upcoming Events */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">
-                            {selectedType === 'all' ? 'All Events' : `${eventTypes.find(t => t.value === selectedType)?.label} Events`}
-                        </h2>
-                        <div className="text-sm text-gray-600">
-                            Showing {Math.min(displayCount, filteredEvents.length)} of {filteredEvents.length} events
-                        </div>
-                    </div>
-                    {filteredEvents.length > 0 ? (
-                        <>
+                {filtered.length === 0 ? (
+                    <p className="text-gray-400 text-center py-10">No events in this category.</p>
+                ) : (
+                    <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {filteredEvents.slice(0, displayCount).map((event) => {
-                                const isCompleted = isEventCompleted(event.date, event.time);
-                                return (
-                                <div key={event.id} className="bg-gray-50 rounded-lg p-5 border border-gray-200 hover:shadow-md transition">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <h3 className="font-semibold text-lg text-gray-800">{event.title}</h3>
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                isCompleted ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
+                            {pageEvents.map(event => (
+                                <div key={event.id} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition flex flex-col">
+                                    {event.image_url ? (
+                                        <img src={event.image_url} alt={event.title}
+                                            className="w-full h-36 object-cover" loading="lazy" />
+                                    ) : (
+                                        <div className="w-full h-36 flex items-center justify-center text-5xl"
+                                            style={{ background: '#eff6ff' }}>
+                                            {typeIcon(event.event_type)}
+                                        </div>
+                                    )}
+                                    <div className="p-5 flex flex-col flex-1">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-bold text-gray-800 text-base leading-snug">{event.title}</h3>
+                                            <span className={`ml-2 text-sm px-3 py-1 rounded-full flex-shrink-0 font-semibold ${
+                                                isCompleted(event.date, event.time) ? 'bg-gray-100 text-gray-500' : 'bg-green-100 text-green-700'
                                             }`}>
-                                                {isCompleted ? '✓ Completed' : '📅 Upcoming'}
+                                                {isCompleted(event.date, event.time) ? 'Completed' : 'Upcoming'}
                                             </span>
                                         </div>
-                                        <span className="text-2xl">{eventTypes.find(t => t.value === event.event_type)?.icon || '📌'}</span>
+                                        <p className="text-sm text-gray-500 line-clamp-2 mb-4">{event.description}</p>
+                                        <div className="text-sm text-gray-600 space-y-1 mb-4">
+                                            <div>📅 {event.date} &nbsp; 🕐 {event.time}</div>
+                                            <div>📍 {event.location}</div>
+                                        </div>
+                                        <Link to={`/events/${event.id}`}
+                                            style={{ background: '#0061ff' }}
+                                            className="block text-center hover:opacity-90 text-white text-base font-semibold py-2.5 rounded-xl transition mt-auto">
+                                            View & Register
+                                        </Link>
                                     </div>
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{event.description}</p>
-                                    <div className="flex flex-col gap-1 text-sm text-gray-500 mb-3">
-                                        <span>📅 {event.date}</span>
-                                        <span>🕐 {event.time}</span>
-                                        <span>📍 {event.location}</span>
-                                    </div>
-                                    <Link
-                                        to={`/events/${event.id}`}
-                                        className="inline-block bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm transition font-medium"
-                                    >
-                                        View Details & Register
-                                    </Link>
                                 </div>
-                            );})}
+                            ))}
                         </div>
-                        {filteredEvents.length > displayCount && (
-                            <div className="flex justify-center mt-6">
-                                <button
-                                    onClick={() => setDisplayCount(prev => prev + 10)}
-                                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg hover:from-blue-700 hover:to-teal-700 transition font-semibold shadow-md"
-                                >
-                                    Load More Events ({filteredEvents.length - displayCount} remaining)
+
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-6">
+                                <button onClick={() => { setPage(p => p - 1); }} disabled={page === 1}
+                                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    ← Prev
+                                </button>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                    <button key={p} onClick={() => setPage(p)}
+                                        style={p === page ? { background: '#0061ff' } : {}}
+                                        className={`w-8 h-8 rounded-lg text-sm font-medium transition ${
+                                            p === page ? 'text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                                        }`}>
+                                        {p}
+                                    </button>
+                                ))}
+                                <button onClick={() => { setPage(p => p + 1); }} disabled={page === totalPages}
+                                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    Next →
                                 </button>
                             </div>
                         )}
-                        </>
-                    ) : (
-                        <p className="text-gray-600 text-center py-8">No {selectedType !== 'all' ? selectedType : ''} events available at the moment</p>
-                    )}
-                </div>
+                    </>
+                )}
             </div>
         </div>
     );

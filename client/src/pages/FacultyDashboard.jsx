@@ -13,7 +13,8 @@ const FacultyDashboard = () => {
     const [rejectionReason, setRejectionReason] = useState('');
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedPermissions, setSelectedPermissions] = useState([]);
-    const [displayCount, setDisplayCount] = useState(10);
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 8;
 
     const isEventCompleted = (eventDate, eventTime) => {
         const now = new Date();
@@ -39,7 +40,13 @@ const FacultyDashboard = () => {
                         .catch(() => [])
                 );
                 const allRegs = (await Promise.all(requestsPromises)).flat();
-                setPendingRequests(allRegs.filter(r => r.role_type === 'coordinator' && r.status === 'pending'));
+                const pending = allRegs.filter(r => r.role_type === 'coordinator' && r.status === 'pending');
+                // Attach event title from facultyEvents since registrations API doesn't join event
+                const enriched = pending.map(r => ({
+                    ...r,
+                    event: facultyEvents.find(e => e.id === r.event_id) || null
+                }));
+                setPendingRequests(enriched);
             }
             setLoading(false);
         } catch (err) {
@@ -96,8 +103,8 @@ const FacultyDashboard = () => {
         );
 
     return (
-        <div className="min-h-screen bg-gray-100 py-10 px-6">
-            <div className="max-w-7xl mx-auto space-y-10">
+        <>
+        <div className="max-w-7xl mx-auto space-y-10">
 
                 {/* HEADER */}
                 <div>
@@ -218,12 +225,10 @@ const FacultyDashboard = () => {
                 {/* RECENT EVENTS */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            My Recent Events
-                        </h2>
-                        <div className="text-sm text-gray-600">
-                            Showing {Math.min(displayCount, myEvents.length)} of {myEvents.length} events
-                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900">My Recent Events</h2>
+                        <span className="text-sm text-gray-500">
+                            {myEvents.length} events · Page {page} of {Math.ceil(myEvents.length / PAGE_SIZE) || 1}
+                        </span>
                     </div>
 
                     {myEvents.length === 0 ? (
@@ -233,7 +238,7 @@ const FacultyDashboard = () => {
                     ) : (
                         <>
                         <div className="divide-y divide-gray-200">
-                            {myEvents.slice(0, displayCount).map(event => {
+                            {myEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(event => {
                                 const isCompleted = isEventCompleted(event.date, event.time);
                                 return (
                                 <div
@@ -286,13 +291,22 @@ const FacultyDashboard = () => {
                                 </div>
                             );})}
                         </div>
-                        {myEvents.length > displayCount && (
-                            <div className="flex justify-center mt-6 pt-6 border-t border-gray-200">
-                                <button
-                                    onClick={() => setDisplayCount(prev => prev + 10)}
-                                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-semibold shadow-md"
-                                >
-                                    Load More Events ({myEvents.length - displayCount} remaining)
+                        {Math.ceil(myEvents.length / PAGE_SIZE) > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-200">
+                                <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
+                                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    ← Prev
+                                </button>
+                                {Array.from({ length: Math.ceil(myEvents.length / PAGE_SIZE) }, (_, i) => i + 1).map(p => (
+                                    <button key={p} onClick={() => setPage(p)}
+                                        style={p === page ? { background: '#0061ff' } : {}}
+                                        className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
+                                            p === page ? 'text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                                        }`}>{p}</button>
+                                ))}
+                                <button onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(myEvents.length / PAGE_SIZE)}
+                                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    Next →
                                 </button>
                             </div>
                         )}
@@ -301,8 +315,8 @@ const FacultyDashboard = () => {
                 </div>
 
             </div>
-            
-            {/* Rejection Modal */}
+
+            {/* Rejection Modal */}}
             {showRejectModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
@@ -506,7 +520,7 @@ const FacultyDashboard = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { sendParticipantRegistrationEmail, sendCoordinatorApprovedEmail } = require('../config/emailService');
 
 // Register for an event
 const registerForEvent = async (req, res) => {
@@ -33,6 +34,19 @@ const registerForEvent = async (req, res) => {
 
         if (error) {
             return res.status(400).json({ error: error.message });
+        }
+
+        // Send confirmation email for participant
+        if (role_type === 'participant') {
+            try {
+                const { data: student } = await supabase.from('users').select('full_name, email').eq('id', student_id).single();
+                const { data: event } = await supabase.from('events').select('title, date, location').eq('id', event_id).single();
+                if (student && event) {
+                    await sendParticipantRegistrationEmail(student.email, student.full_name, event.title, event.date, event.location);
+                }
+            } catch (emailErr) {
+                console.error('Email error:', emailErr);
+            }
         }
 
         res.status(201).json(data);
@@ -96,7 +110,7 @@ const getMyRegistrations = async (req, res) => {
             return res.status(400).json({ error: error.message });
         }
 
-        res.set('Cache-Control', 'private, max-age=30');
+        res.set('Cache-Control', 'no-store');
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
@@ -126,6 +140,26 @@ const updateRegistrationStatus = async (req, res) => {
 
         if (error) {
             return res.status(400).json({ error: error.message });
+        }
+
+        // Send email if coordinator approved
+        if (status === 'approved' && coordinator_permissions) {
+            try {
+                const { data: reg } = await supabase
+                    .from('registrations')
+                    .select('student_id, event_id')
+                    .eq('id', id)
+                    .single();
+                if (reg) {
+                    const { data: student } = await supabase.from('users').select('full_name, email').eq('id', reg.student_id).single();
+                    const { data: event } = await supabase.from('events').select('title').eq('id', reg.event_id).single();
+                    if (student && event) {
+                        await sendCoordinatorApprovedEmail(student.email, student.full_name, event.title, coordinator_permissions);
+                    }
+                }
+            } catch (emailErr) {
+                console.error('Email error:', emailErr);
+            }
         }
 
         res.json(data);

@@ -19,8 +19,7 @@ const MyEvents = () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                console.log('My Registrations Data:', data); // Debug log
-                setRegistrations(data);
+                setRegistrations(Array.isArray(data) ? data : []);
             }
         } catch (error) {
             console.error('Error fetching events:', error);
@@ -34,11 +33,10 @@ const MyEvents = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100 p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
+        <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h1 className="text-4xl font-bold text-gray-800">My Events</h1>
-                    <p className="text-gray-600 mt-1">View all your event registrations and coordinator roles</p>
+                    <h1 className="text-3xl font-bold text-gray-800">My Events</h1>
+                    <p className="text-gray-500 mt-1">Your event registrations and coordinator roles</p>
                 </div>
 
                 {registrations.length === 0 ? (
@@ -62,8 +60,11 @@ const MyEvents = () => {
                                             }`}>
                                                 {reg.role_type === 'coordinator' ? '⭐ Coordinator' : '👥 Participant'}
                                             </span>
-                                            {/* Debug info */}
-                                            <span className="text-xs text-gray-400">(role: {reg.role_type || 'null'})</span>
+                                            {reg.role_type === 'coordinator' && reg.status === 'pending' && (
+                                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-600">
+                                                    ⏳ Waiting for Approval
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="flex gap-6 text-sm text-gray-600 mb-3">
                                             <span>📅 {reg.event?.date}</span>
@@ -129,7 +130,6 @@ const MyEvents = () => {
                     )}
                     </>
                 )}
-            </div>
         </div>
     );
 };

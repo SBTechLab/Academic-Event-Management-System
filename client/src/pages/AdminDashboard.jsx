@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchWithCache } from '../cacheUtils';
+import { fetchWithCache, clearCache } from '../cacheUtils';
 
 const AdminDashboard = () => {
     const { user, getAuthHeaders } = useAuth();
@@ -16,7 +16,8 @@ const AdminDashboard = () => {
     const [events, setEvents] = useState([]);
     const [faculty, setFaculty] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [displayCount, setDisplayCount] = useState(10);
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 8;
 
     const isEventCompleted = (eventDate, eventTime) => {
         const now = new Date();
@@ -30,8 +31,9 @@ const AdminDashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
+            clearCache(); // Clear cache to ensure fresh data
             const [eventsData, facultyData] = await Promise.all([
-                fetchWithCache('http://localhost:5001/api/events?limit=50'),
+                fetch('http://localhost:5001/api/events?limit=50').then(r => r.json()), // Direct fetch instead of cache
                 fetch('http://localhost:5001/api/users/faculty', { headers: getAuthHeaders() }).then(r => r.json())
             ]);
 
@@ -86,8 +88,7 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 p-6">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                     <div className="flex justify-between items-center">
                         <div>
@@ -144,14 +145,14 @@ const AdminDashboard = () => {
                             <>
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-lg font-semibold text-gray-800">All Events</h3>
-                                <div className="text-sm text-gray-600">
-                                    Showing {Math.min(displayCount, events.length)} of {events.length} events
-                                </div>
+                                <span className="text-sm text-gray-500">
+                                    {events.length} events · Page {page} of {Math.ceil(events.length / PAGE_SIZE) || 1}
+                                </span>
                             </div>
                             <div className="space-y-6">
                                 {events.length > 0 ? (
                                     <>
-                                    {events.slice(0, displayCount).map((event) => {
+                                    {events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((event) => {
                                         const isCompleted = isEventCompleted(event.date, event.time);
                                         return (
                                         <div key={event.id} className="bg-gray-50 border border-gray-200 rounded-xl p-6">
@@ -200,13 +201,22 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                     );})}
-                                    {events.length > displayCount && (
-                                        <div className="flex justify-center pt-6">
-                                            <button
-                                                onClick={() => setDisplayCount(prev => prev + 10)}
-                                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold shadow-md"
-                                            >
-                                                Load More Events ({events.length - displayCount} remaining)
+                                    {Math.ceil(events.length / PAGE_SIZE) > 1 && (
+                                        <div className="flex items-center justify-center gap-2 pt-4">
+                                            <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
+                                                className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                ← Prev
+                                            </button>
+                                            {Array.from({ length: Math.ceil(events.length / PAGE_SIZE) }, (_, i) => i + 1).map(p => (
+                                                <button key={p} onClick={() => setPage(p)}
+                                                    style={p === page ? { background: '#0061ff' } : {}}
+                                                    className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
+                                                        p === page ? 'text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                                                    }`}>{p}</button>
+                                            ))}
+                                            <button onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(events.length / PAGE_SIZE)}
+                                                className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                Next →
                                             </button>
                                         </div>
                                     )}
@@ -246,7 +256,6 @@ const AdminDashboard = () => {
                         )}
                     </div>
                 </div>
-            </div>
         </div>
     );
 };

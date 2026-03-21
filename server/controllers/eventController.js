@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { sendEventCreatedEmail, sendEventStatusEmail } = require('../config/emailService');
 
 // Get all events
 const getEvents = async (req, res) => {
@@ -76,6 +77,20 @@ const createEvent = async (req, res) => {
             return res.status(400).json({ error: error.message });
         }
 
+        // Send confirmation email to faculty
+        try {
+            const { data: creator } = await supabase
+                .from('users')
+                .select('full_name, email')
+                .eq('id', req.user.id)
+                .single();
+            if (creator) {
+                await sendEventCreatedEmail(creator.email, creator.full_name, title);
+            }
+        } catch (emailErr) {
+            console.error('Email error:', emailErr);
+        }
+
         res.status(201).json(data);
     } catch (err) {
         console.error('Create event error:', err);
@@ -121,6 +136,26 @@ const updateEvent = async (req, res) => {
                     type: updates.status === 'approved' ? 'success' : 'warning',
                     is_read: false
                 }]);
+
+            // Send email to faculty
+            try {
+                const { data: creator } = await supabase
+                    .from('users')
+                    .select('full_name, email')
+                    .eq('id', oldEvent.created_by)
+                    .single();
+                if (creator) {
+                    await sendEventStatusEmail(
+                        creator.email,
+                        creator.full_name,
+                        oldEvent.title,
+                        updates.status,
+                        updates.rejection_reason
+                    );
+                }
+            } catch (emailErr) {
+                console.error('Email error:', emailErr);
+            }
         }
 
         res.json(data);
@@ -132,15 +167,29 @@ const updateEvent = async (req, res) => {
 // Delete event
 const deleteEvent = async (req, res) => {
     const { id } = req.params;
+    const { reason } = req.body;
 
     try {
+        const { data: event } = await supabase
+            .from('events')
+            .select('title, created_by')
+            .eq('id', id)
+            .single();
+
         const { error } = await supabase
             .from('events')
             .delete()
             .eq('id', id);
 
-        if (error) {
-            return res.status(400).json({ error: error.message });
+        if (error) return res.status(400).json({ error: error.message });
+
+        if (event) {
+            await supabase.from('notifications').insert([{
+                user_id: event.created_by,
+                message: `Your event "${event.title}" has been deleted by admin.${ reason ? ` Reason: ${reason}` : '' }`,
+                type: 'warning',
+                is_read: false
+            }]);
         }
 
         res.json({ message: 'Event deleted successfully' });

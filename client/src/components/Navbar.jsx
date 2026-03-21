@@ -52,12 +52,14 @@ const Navbar = () => {
                         Home
                     </Link>
 
-                    <Link 
-                        to="/events" 
-                        className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
-                    >
-                        Events
-                    </Link>
+                    {user && (
+                        <Link 
+                            to="/events" 
+                            className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+                        >
+                            Events
+                        </Link>
+                    )}
 
                     {/* Auth Section */}
                     <div className="flex items-center space-x-4">
