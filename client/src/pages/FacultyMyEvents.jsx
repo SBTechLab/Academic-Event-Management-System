@@ -15,19 +15,38 @@ const FacultyMyEvents = () => {
 
     const isCompleted = (date, time) => new Date(`${date}T${time}`) < new Date();
 
+    const loadEvents = async () => {
+        try {
+            const data = await fetch('http://localhost:5001/api/events?limit=100', { headers: getAuthHeaders() })
+                .then(r => r.json());
+            setEvents(Array.isArray(data) ? data.filter(e => e.created_by === user.id) : []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const load = async () => {
-            try {
-                const data = await fetch('http://localhost:5001/api/events?limit=100', { headers: getAuthHeaders() })
-                    .then(r => r.json());
-                setEvents(Array.isArray(data) ? data.filter(e => e.created_by === user.id) : []);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
+        loadEvents();
+    }, []);
+
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                loadEvents();
             }
         };
-        load();
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // Refresh every 10 seconds to check for updates
+    useEffect(() => {
+        const interval = setInterval(loadEvents, 10000);
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
@@ -56,11 +75,19 @@ const FacultyMyEvents = () => {
                     <h1 className="text-2xl font-bold text-gray-800">My Events</h1>
                     <p className="text-gray-500 text-sm mt-1">{events.length} events created by you</p>
                 </div>
-                <Link to="/create-event"
-                    className="text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 transition"
-                    style={{ background: BLUE }}>
-                    + Create Event
-                </Link>
+                <div className="flex gap-3 items-center">
+                    <button
+                        onClick={loadEvents}
+                        className="text-gray-600 hover:text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-50 transition"
+                        title="Refresh events">
+                        🔄 Refresh
+                    </button>
+                    <Link to="/create-event"
+                        className="text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 transition"
+                        style={{ background: BLUE }}>
+                        + Create Event
+                    </Link>
+                </div>
             </div>
 
             {events.length === 0 ? (

@@ -40,6 +40,45 @@ const Events = () => {
         fetchEvents();
     }, [role]);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                const fetchEvents = async () => {
+                    try {
+                        const data = await fetchWithCache('http://localhost:5001/api/events?limit=50');
+                        const filtered = (role === 'student' || role === 'student_coordinator')
+                            ? data.filter(e => e.status === 'approved' || e.status === 'cancelled')
+                            : data;
+                        setEvents(filtered);
+                    } catch (err) {
+                        setError(err.message || 'Failed to fetch events');
+                    }
+                };
+                fetchEvents();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [role]);
+
+    // Refresh every 10 seconds for real-time updates
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            try {
+                const data = await fetchWithCache('http://localhost:5001/api/events?limit=50');
+                const filtered = (role === 'student' || role === 'student_coordinator')
+                    ? data.filter(e => e.status === 'approved' || e.status === 'cancelled')
+                    : data;
+                setEvents(filtered);
+            } catch (err) {
+                console.error('Failed to refresh events:', err);
+            }
+        }, 10000);
+        return () => clearInterval(interval);
+    }, [role]);
+
     if (loading) return <div className="flex items-center justify-center h-64 text-gray-500">Loading events...</div>;
     if (error) return <div className="flex items-center justify-center h-64 text-red-500">{error}</div>;
 

@@ -46,6 +46,47 @@ const StudentDashboard = () => {
         fetchData();
     }, []);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                const fetchData = async () => {
+                    try {
+                        const [eventsData, regData] = await Promise.all([
+                            fetchWithCache('http://localhost:5001/api/events?limit=50'),
+                            fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
+                        ]);
+                        setAllEvents(eventsData.filter(e => e.status === 'approved'));
+                        setRegistrations(Array.isArray(regData) ? regData : []);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                };
+                fetchData();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // Refresh every 10 seconds for real-time updates
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            try {
+                const [eventsData, regData] = await Promise.all([
+                    fetchWithCache('http://localhost:5001/api/events?limit=50'),
+                    fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
+                ]);
+                setAllEvents(eventsData.filter(e => e.status === 'approved'));
+                setRegistrations(Array.isArray(regData) ? regData : []);
+            } catch (err) {
+                console.error('Failed to refresh dashboard:', err);
+            }
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     if (loading) return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
 
     const filtered = selectedType === 'all' ? allEvents : allEvents.filter(e => e.event_type === selectedType);
@@ -55,34 +96,34 @@ const StudentDashboard = () => {
     const handleTypeChange = (type) => { setSelectedType(type); setPage(1); };
 
     return (
-        <div className="space-y-6">
+        <div className="dashboard-shell">
             {/* Welcome */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user?.full_name}</h1>
-                <p className="text-gray-500 text-sm mt-1">Here's what's happening with events today.</p>
+            <div className="dashboard-card p-7">
+                <h1 className="dashboard-title text-3xl">Welcome back, {user?.full_name}</h1>
+                <p className="dashboard-subtitle mt-2">Here's what's happening with events today.</p>
                 <Link to="/my-events" className="inline-block mt-3 text-sm font-semibold" style={{ color: '#0061ff' }}>
                     View My Registrations →
                 </Link>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-                <div className="text-white p-5 rounded-xl shadow" style={{ background: '#0061ff' }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-white p-6 rounded-2xl shadow-md" style={{ background: '#0061ff' }}>
                     <p className="text-blue-100 text-sm font-medium">Available Events</p>
                     <p className="text-4xl font-bold mt-1">{allEvents.length}</p>
                 </div>
-                <div className="text-white p-5 rounded-xl shadow" style={{ background: '#0050d0' }}>
+                <div className="text-white p-6 rounded-2xl shadow-md" style={{ background: '#0050d0' }}>
                     <p className="text-blue-100 text-sm font-medium">My Registrations</p>
                     <p className="text-4xl font-bold mt-1">{registrations.length}</p>
                 </div>
-                <div className="text-white p-5 rounded-xl shadow" style={{ background: '#003fa3' }}>
+                <div className="text-white p-6 rounded-2xl shadow-md" style={{ background: '#003fa3' }}>
                     <p className="text-blue-100 text-sm font-medium">Attended</p>
                     <p className="text-4xl font-bold mt-1">{registrations.filter(r => r.status === 'attended').length}</p>
                 </div>
             </div>
 
             {/* Filter */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="dashboard-card p-5">
                 <div className="flex flex-wrap gap-2">
                     {eventTypes.map(t => (
                         <button key={t.value} onClick={() => handleTypeChange(t.value)}
@@ -97,7 +138,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Events Grid */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="dashboard-card p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-gray-800">
                         {selectedType === 'all' ? 'All Events' : `${eventTypes.find(t => t.value === selectedType)?.label} Events`}

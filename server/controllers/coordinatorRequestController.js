@@ -1,5 +1,5 @@
 const supabase = require('../config/supabase');
-const { sendCoordinatorRequestToAdmin, sendCoordinatorRejectedEmail, sendCoordinatorRoleApprovedEmail, getAdminEmails } = require('../config/emailService');
+const { sendCoordinatorRequestToFaculty, sendCoordinatorRejectedEmail, sendCoordinatorRoleApprovedEmail, getFacultyEmails } = require('../config/emailService');
 
 // Student: Request to become coordinator
 const requestCoordinator = async (req, res) => {
@@ -17,19 +17,19 @@ const requestCoordinator = async (req, res) => {
             return res.status(400).json({ error: error.message });
         }
 
-        // Notify admin about new coordinator request
+        // Notify faculty about new coordinator request
         try {
             const { data: student } = await supabase
                 .from('users')
                 .select('full_name, email')
                 .eq('id', req.user.id)
                 .single();
-            const adminEmails = await getAdminEmails(supabase);
-            for (const adminEmail of adminEmails) {
-                await sendCoordinatorRequestToAdmin(adminEmail, student?.full_name || 'A student', student?.email || '');
+            const facultyEmails = await getFacultyEmails(supabase);
+            for (const facultyEmail of facultyEmails) {
+                await sendCoordinatorRequestToFaculty(facultyEmail, student?.full_name || 'A student', student?.email || '');
             }
         } catch (emailErr) {
-            console.error('Admin email error:', emailErr);
+            console.error('Faculty email error:', emailErr);
         }
 
         res.status(201).json(data);

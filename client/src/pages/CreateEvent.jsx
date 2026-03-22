@@ -40,7 +40,7 @@ const CreateEvent = () => {
             }
 
             const dashboardRoute = role === 'admin' ? '/admin-dashboard' : 
-                                   role === 'faculty' ? '/faculty-dashboard' : 
+                                   role === 'faculty' ? '/faculty-my-events' : 
                                    '/student-dashboard';
             navigate(dashboardRoute);
         } catch (err) {

@@ -10,213 +10,87 @@ const transporter = nodemailer.createTransport({
 
 // Send event created confirmation to faculty
 const sendEventCreatedEmail = async (facultyEmail, facultyName, eventTitle) => {
-    const cfg = { color: '#38bdf8', gradient: 'linear-gradient(135deg, #0f172a 0%, #0369a1 50%, #0c4a6e 100%)' };
+    const body = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+            <h2 style="font-size: 22px; margin-bottom: 10px;">Event Submitted</h2>
+            <p>Hi <strong>${facultyName}</strong>,</p>
+            <p>Your event "<strong>${eventTitle}</strong>" has been submitted successfully and is now pending admin approval.</p>
+            <p style="font-size: 14px; color: #4b5563; margin-top: 14px;">Status: <strong>Pending</strong></p>
+            <hr style="margin: 24px 0;" />
+            <p style="font-size: 12px; color: #6b7280;">UniEvents - Academic Event Management System</p>
+        </div>
+    `;
+
     await transporter.sendMail({
         from: `"UniEvents" <${process.env.EMAIL_USER}>`,
         to: facultyEmail,
-        subject: `Event Submitted: ${eventTitle}`,
-        html: `
-            <div style="font-family: 'Segoe UI', -apple-system, Arial, sans-serif; max-width: 620px; margin: 0 auto; background: #0f172a; border-radius: 20px; overflow: hidden;">
-                <!-- Header -->
-                <div style="background: ${cfg.gradient}; padding: 30px 32px 24px; text-align: center; position: relative;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.03);"></div>
-                    <div style="width: 60px; height: 60px; margin: 0 auto 14px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);">
-                        <span style="font-size: 28px; line-height: 60px;">🚀</span>
-                    </div>
-                    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">Event Submitted!</h1>
-                    <p style="color: rgba(255,255,255,0.6); margin: 6px 0 0; font-size: 13px;">Successfully sent for admin approval</p>
-                    <div style="margin-top: 16px;">
-                        <span style="background: rgba(245, 158, 11, 0.15); color: #fbd38d; padding: 6px 20px; border-radius: 30px; font-size: 12px; font-weight: 600; border: 1px solid rgba(245, 158, 11, 0.3);">STATUS: PENDING</span>
-                    </div>
-                </div>
-
-                <!-- Greeting -->
-                <div style="padding: 24px 32px 0;">
-                    <p style="color: #e2e8f0; font-size: 15px; margin: 0; line-height: 1.6;">Hello <strong style="color: ${cfg.color};">${facultyName}</strong></p>
-                    <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0; line-height: 1.6;">
-                        Your event <strong>"${eventTitle}"</strong> has been submitted and is currently pending admin approval. You will be notified once the admin reviews your event.
-                    </p>
-                </div>
-                
-                <!-- Divider -->
-                <div style="padding: 24px 32px 0;">
-                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
-                </div>
-
-                <!-- Footer -->
-                <div style="padding: 24px 32px 28px; text-align: center;">
-                    <p style="color: #475569; font-size: 18px; margin: 0 0 6px; font-weight: 800;"><span style="color: #3b82f6;">Uni</span><span style="color: #e2e8f0;">Events</span></p>
-                    <p style="color: #475569; font-size: 11px; margin: 0;">Academic Event Management System</p>
-                </div>
-            </div>
-        `
+        subject: `Event submitted: ${eventTitle}`,
+        html: body
     });
 };
 
 // Send event approved/rejected email to faculty
 const sendEventStatusEmail = async (facultyEmail, facultyName, eventTitle, status, rejectionReason) => {
-    const isApproved = status === 'approved';
-    const cfg = isApproved 
-        ? { icon: '✅', color: '#34d399', gradient: 'linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #059669 100%)', badgeBg: 'rgba(34, 197, 94, 0.15)', badgeText: '#4ade80', badgeTextLabel: 'APPROVED' }
-        : { icon: '❌', color: '#ef4444', gradient: 'linear-gradient(135deg, #0f172a 0%, #450a0a 50%, #7f1d1d 100%)', badgeBg: 'rgba(239, 68, 68, 0.15)', badgeText: '#fca5a5', badgeTextLabel: 'REJECTED' };
+    const body = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+            <h2 style="font-size: 22px; margin-bottom: 10px;">Event ${status === 'approved' ? 'Approved' : 'Rejected'}</h2>
+            <p>Hi <strong>${facultyName}</strong>,</p>
+            <p>Your event "<strong>${eventTitle}</strong>" has been <strong>${status}</strong>.</p>
+            ${status === 'rejected' ? `<p>Reason: ${rejectionReason || 'None provided'}</p>` : ''}
+            <p style="font-size: 14px; color: #4b5563; margin-top: 16px;">Status: <strong>${status}</strong></p>
+            <hr style="margin: 24px 0;" />
+            <p style="font-size: 12px; color: #6b7280;">UniEvents - Academic Event Management System</p>
+        </div>
+    `;
 
     await transporter.sendMail({
         from: `"UniEvents" <${process.env.EMAIL_USER}>`,
         to: facultyEmail,
-        subject: `Event ${isApproved ? 'Approved' : 'Rejected'}: ${eventTitle}`,
-        html: `
-            <div style="font-family: 'Segoe UI', -apple-system, Arial, sans-serif; max-width: 620px; margin: 0 auto; background: #0f172a; border-radius: 20px; overflow: hidden;">
-                <!-- Header -->
-                <div style="background: ${cfg.gradient}; padding: 30px 32px 24px; text-align: center; position: relative;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.03);"></div>
-                    <div style="width: 60px; height: 60px; margin: 0 auto 14px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);">
-                        <span style="font-size: 28px; line-height: 60px;">${cfg.icon}</span>
-                    </div>
-                    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">Event ${isApproved ? 'Approved!' : 'Rejected'}</h1>
-                    <p style="color: rgba(255,255,255,0.6); margin: 6px 0 0; font-size: 13px;">Update on your submitted event proposal</p>
-                    <div style="margin-top: 16px;">
-                        <span style="background: ${cfg.badgeBg}; color: ${cfg.badgeText}; padding: 6px 20px; border-radius: 30px; font-size: 12px; font-weight: 600; border: 1px solid ${cfg.badgeBg};">STATUS: ${cfg.badgeTextLabel}</span>
-                    </div>
-                </div>
-
-                <!-- Greeting -->
-                <div style="padding: 24px 32px 0;">
-                    <p style="color: #e2e8f0; font-size: 15px; margin: 0; line-height: 1.6;">Hello <strong style="color: ${cfg.color};">${facultyName}</strong></p>
-                    <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0; line-height: 1.6;">
-                        Your event <strong>"${eventTitle}"</strong> has been <strong style="color: ${cfg.color};">${status}</strong> by the admin.
-                    </p>
-                </div>
-                
-                ${!isApproved && rejectionReason ? `
-                <!-- Rejection Details -->
-                <div style="padding: 20px 32px 0;">
-                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04)); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 12px; padding: 20px;">
-                        <div style="color: #fca5a5; font-size: 13px; font-weight: 700; margin-bottom: 8px;">Reason for Rejection:</div>
-                        <div style="color: #e2e8f0; font-size: 14px; line-height: 1.6;">
-                            ${rejectionReason}
-                        </div>
-                    </div>
-                </div>
-                ` : ''}
-
-                <!-- Divider -->
-                <div style="padding: 24px 32px 0;">
-                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
-                </div>
-
-                <!-- Footer -->
-                <div style="padding: 24px 32px 28px; text-align: center;">
-                    <p style="color: #475569; font-size: 18px; margin: 0 0 6px; font-weight: 800;"><span style="color: #3b82f6;">Uni</span><span style="color: #e2e8f0;">Events</span></p>
-                    <p style="color: #475569; font-size: 11px; margin: 0;">Academic Event Management System</p>
-                </div>
-            </div>
-        `
+        subject: `Event ${status === 'approved' ? 'approved' : 'rejected'}: ${eventTitle}`,
+        html: body
     });
 };
 
 // Send coordinator approved email to student
 const sendCoordinatorApprovedEmail = async (studentEmail, studentName, eventTitle, permissions) => {
-    const permissionLabels = {
-        generate_certificates: '📜 Generate Certificates',
-        view_participants: '👥 View Participant List',
-        update_schedule: '📅 Update Schedule',
-        add_details: '✏️ Add Event Details'
-    };
-    const permListHtml = permissions.map(p => 
-        `<span style="display: inline-block; background: rgba(124, 58, 237, 0.15); color: #c4b5fd; padding: 6px 14px; border-radius: 6px; font-size: 13px; margin: 0 8px 8px 0; border: 1px solid rgba(124, 58, 237, 0.3);">✓ ${permissionLabels[p] || p}</span>`
-    ).join('');
+    const perms = permissions && permissions.length ? permissions.join(', ') : 'Standard permissions';
 
-    const cfg = { color: '#a78bfa', gradient: 'linear-gradient(135deg, #0f172a 0%, #3b0764 50%, #7c3aed 100%)' };
+    const body = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+            <h2 style="font-size: 22px; margin-bottom: 10px;">Coordinator Request Approved</h2>
+            <p>Hi <strong>${studentName}</strong>,</p>
+            <p>Your request to be coordinator for "<strong>${eventTitle}</strong>" is approved.</p>
+            <p>Permissions granted: <strong>${perms}</strong>.</p>
+            <p style="font-size: 12px; color: #6b7280; margin-top: 16px;">UniEvents - Academic Event Management System</p>
+        </div>
+    `;
 
     await transporter.sendMail({
         from: `"UniEvents" <${process.env.EMAIL_USER}>`,
         to: studentEmail,
-        subject: `🎉 Coordinator Request Approved: ${eventTitle}`,
-        html: `
-            <div style="font-family: 'Segoe UI', -apple-system, Arial, sans-serif; max-width: 620px; margin: 0 auto; background: #0f172a; border-radius: 20px; overflow: hidden;">
-                
-                <!-- Header -->
-                <div style="background: ${cfg.gradient}; padding: 30px 32px 24px; text-align: center; position: relative;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.03);"></div>
-                    <div style="width: 60px; height: 60px; margin: 0 auto 14px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);">
-                        <span style="font-size: 28px; line-height: 60px;">⚡</span>
-                    </div>
-                    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">Request Approved!</h1>
-                    <p style="color: rgba(255,255,255,0.6); margin: 6px 0 0; font-size: 13px;">You are now an Event Coordinator</p>
-                    <div style="margin-top: 16px;">
-                        <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 6px 20px; border-radius: 30px; font-size: 12px; font-weight: 600; border: 1px solid rgba(34, 197, 94, 0.3);">✅ STATUS: APPROVED</span>
-                    </div>
-                </div>
-
-                <!-- Greeting -->
-                <div style="padding: 24px 32px 0;">
-                    <p style="color: #e2e8f0; font-size: 15px; margin: 0; line-height: 1.6;">Hello <strong style="color: ${cfg.color};">${studentName}</strong> 🎓</p>
-                    <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0; line-height: 1.6;">
-                        Congratulations! The faculty organizer has approved your request to be a Student Coordinator for:
-                    </p>
-                </div>
-
-                <!-- Event Details -->
-                <div style="padding: 20px 32px;">
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;">
-                        <div style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;">📋 Event Title</div>
-                        <div style="color: #f1f5f9; font-size: 17px; font-weight: 700;">${eventTitle}</div>
-                    </div>
-
-                    <!-- Permissions Section -->
-                    <div style="background: rgba(124, 58, 237, 0.04); border: 1px solid rgba(124, 58, 237, 0.15); border-radius: 12px; padding: 20px;">
-                        <div style="color: #a78bfa; font-size: 13px; font-weight: 700; margin-bottom: 12px;">🔑 Permissions Granted:</div>
-                        <div style="margin-top: 8px;">
-                            ${permListHtml || '<span style="color: #64748b; font-size: 13px;">No special permissions granted.</span>'}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Next Steps -->
-                <div style="padding: 0 32px 24px;">
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
-                        <div style="color: #e2e8f0; font-size: 14px; font-weight: 700; margin-bottom: 8px;">👉 Next Steps</div>
-                        <div style="color: #94a3b8; font-size: 13px; line-height: 1.6;">
-                            You now have access to the <strong>Coordinator Dashboard</strong>. Please log in to your account and navigate to your dashboard to view the event and manage participants.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Divider -->
-                <div style="padding: 0 32px;">
-                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
-                </div>
-
-                <!-- Footer -->
-                <div style="padding: 24px 32px 28px; text-align: center;">
-                    <p style="color: #475569; font-size: 18px; margin: 0 0 6px; font-weight: 800;"><span style="color: ${cfg.color};">Uni</span><span style="color: #e2e8f0;">Events</span></p>
-                    <p style="color: #475569; font-size: 11px; margin: 0;">Academic Event Management System</p>
-                </div>
-            </div>
-        `
+        subject: `Coordinator approved: ${eventTitle}`,
+        html: body
     });
 };
 
 // Send participant registration confirmation to student
 const sendParticipantRegistrationEmail = async (studentEmail, studentName, eventTitle, eventDate, eventLocation) => {
+    const body = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+            <h2 style="font-size: 22px; color: #1d4ed8; margin-bottom: 10px;">Registration Confirmed</h2>
+            <p>Hi <strong>${studentName}</strong>,</p>
+            <p>You are registered for "<strong>${eventTitle}</strong>".</p>
+            <p>Date: <strong>${new Date(eventDate).toLocaleDateString()}</strong></p>
+            <p>Location: <strong>${eventLocation}</strong></p>
+            <p style="font-size: 12px; color: #6b7280; margin-top: 16px;">UniEvents - Academic Event Management System</p>
+        </div>
+    `;
+
     await transporter.sendMail({
         from: `"UniEvents" <${process.env.EMAIL_USER}>`,
         to: studentEmail,
-        subject: `Registration Confirmed: ${eventTitle}`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <h2 style="color: #3674B5;">Registration Confirmed ✓</h2>
-                <p>Dear <strong>${studentName}</strong>,</p>
-                <p>You have successfully registered for <strong>"${eventTitle}"</strong>.</p>
-                <div style="background: #eff6ff; border-left: 4px solid #3674B5; padding: 12px; margin: 16px 0; border-radius: 4px;">
-                    <p style="margin: 4px 0;">📅 <strong>Date:</strong> ${new Date(eventDate).toLocaleDateString()}</p>
-                    <p style="margin: 4px 0;">📍 <strong>Location:</strong> ${eventLocation}</p>
-                </div>
-                <p>We look forward to seeing you at the event!</p>
-                <br/>
-                <p style="color: #888; font-size: 13px;">— UniEvents Team</p>
-            </div>
-        `
+        subject: `Registration confirmed: ${eventTitle}`,
+        html: body
     });
 };
 
@@ -294,11 +168,11 @@ const sendNewEventToAdmin = async (adminEmail, facultyName, eventTitle) => {
     });
 };
 
-// Notify admin when a student requests coordinator role
-const sendCoordinatorRequestToAdmin = async (adminEmail, studentName, studentEmail) => {
+// Notify faculty when a student requests coordinator role
+const sendCoordinatorRequestToFaculty = async (facultyEmail, studentName, studentEmail) => {
     await transporter.sendMail({
         from: `"UniEvents" <${process.env.EMAIL_USER}>`,
-        to: adminEmail,
+        to: facultyEmail,
         subject: `New Coordinator Request from ${studentName}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
@@ -318,58 +192,21 @@ const sendCoordinatorRequestToAdmin = async (adminEmail, studentName, studentEma
 
 // Notify student that their coordinator request is pending
 const sendCoordinatorPendingEmail = async (studentEmail, studentName, eventTitle) => {
-    const cfg = { color: '#f59e0b', gradient: 'linear-gradient(135deg, #0f172a 0%, #451a03 50%, #78350f 100%)' };
+    const body = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+            <h2 style="font-size: 22px; margin-bottom: 10px;">Coordinator Request Pending</h2>
+            <p>Hi <strong>${studentName}</strong>,</p>
+            <p>Your request to become coordinator for "<strong>${eventTitle}</strong>" is under review.</p>
+            <p style="margin-top:10px;font-size:14px;color:#4b5563;">Status: <strong>Pending</strong></p>
+            <p style="font-size:12px;color:#6b7280;margin-top:16px;">UniEvents - Academic Event Management System</p>
+        </div>
+    `;
 
     await transporter.sendMail({
         from: `"UniEvents" <${process.env.EMAIL_USER}>`,
         to: studentEmail,
-        subject: `⏳ Coordinator Request Pending: ${eventTitle}`,
-        html: `
-            <div style="font-family: 'Segoe UI', -apple-system, Arial, sans-serif; max-width: 620px; margin: 0 auto; background: #0f172a; border-radius: 20px; overflow: hidden;">
-                
-                <!-- Header -->
-                <div style="background: ${cfg.gradient}; padding: 30px 32px 24px; text-align: center; position: relative;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.03);"></div>
-                    <div style="width: 60px; height: 60px; margin: 0 auto 14px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);">
-                        <span style="font-size: 28px; line-height: 60px;">⏳</span>
-                    </div>
-                    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">Request Submitted</h1>
-                    <p style="color: rgba(255,255,255,0.6); margin: 6px 0 0; font-size: 13px;">Your coordinator application is under review</p>
-                    <div style="margin-top: 16px;">
-                        <span style="background: rgba(245, 158, 11, 0.15); color: #fbd38d; padding: 6px 20px; border-radius: 30px; font-size: 12px; font-weight: 600; border: 1px solid rgba(245, 158, 11, 0.3);">STATUS: PENDING</span>
-                    </div>
-                </div>
-
-                <!-- Greeting -->
-                <div style="padding: 24px 32px 0;">
-                    <p style="color: #e2e8f0; font-size: 15px; margin: 0; line-height: 1.6;">Hello <strong style="color: ${cfg.color};">${studentName}</strong></p>
-                    <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0; line-height: 1.6;">
-                        We have received your request to become an Event Coordinator for <strong>"${eventTitle}"</strong>.
-                    </p>
-                </div>
-
-                <!-- Next Steps -->
-                <div style="padding: 24px 32px;">
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
-                        <div style="color: #e2e8f0; font-size: 14px; font-weight: 700; margin-bottom: 8px;">Next Steps</div>
-                        <div style="color: #94a3b8; font-size: 13px; line-height: 1.6;">
-                            The event organizer will review your request shortly. You will receive another email once your application has been approved or rejected.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Divider -->
-                <div style="padding: 0 32px;">
-                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
-                </div>
-
-                <!-- Footer -->
-                <div style="padding: 24px 32px 28px; text-align: center;">
-                    <p style="color: #475569; font-size: 18px; margin: 0 0 6px; font-weight: 800;"><span style="color: #3b82f6;">Uni</span><span style="color: #e2e8f0;">Events</span></p>
-                    <p style="color: #475569; font-size: 11px; margin: 0;">Academic Event Management System</p>
-                </div>
-            </div>
-        `
+        subject: `Coordinator request pending: ${eventTitle}`,
+        html: body
     });
 };
 
@@ -431,77 +268,22 @@ const sendCoordinatorRejectedEmail = async (studentEmail, studentName) => {
 
 // Notify student when their registration is rejected
 const sendRegistrationRejectedEmail = async (studentEmail, studentName, eventTitle, rejectionReason, roleType = 'participant') => {
-    const isCoordinator = roleType === 'coordinator';
-    const typeLabel = isCoordinator ? 'Coordinator Request' : 'Registration';
-    const cfg = { color: '#ef4444', gradient: 'linear-gradient(135deg, #0f172a 0%, #450a0a 50%, #7f1d1d 100%)' };
+    const typeLabel = roleType === 'coordinator' ? 'Coordinator Request' : 'Registration';
+    const body = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+            <h2 style="font-size: 22px; margin-bottom: 10px;">${typeLabel} Rejected</h2>
+            <p>Hi <strong>${studentName}</strong>,</p>
+            <p>Your ${typeLabel.toLowerCase()} for "<strong>${eventTitle}</strong>" has been rejected.</p>
+            <p>Reason: ${rejectionReason || 'No reason provided'}</p>
+            <p style="font-size: 12px; color: #6b7280; margin-top: 16px;">UniEvents - Academic Event Management System</p>
+        </div>
+    `;
 
     await transporter.sendMail({
         from: `"UniEvents" <${process.env.EMAIL_USER}>`,
         to: studentEmail,
-        subject: `❌ ${typeLabel} Rejected: ${eventTitle}`,
-        html: `
-            <div style="font-family: 'Segoe UI', -apple-system, Arial, sans-serif; max-width: 620px; margin: 0 auto; background: #0f172a; border-radius: 20px; overflow: hidden;">
-                
-                <!-- Header -->
-                <div style="background: ${cfg.gradient}; padding: 30px 32px 24px; text-align: center; position: relative;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.03);"></div>
-                    <div style="width: 60px; height: 60px; margin: 0 auto 14px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);">
-                        <span style="font-size: 28px; line-height: 60px;">❌</span>
-                    </div>
-                    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">Request Rejected</h1>
-                    <p style="color: rgba(255,255,255,0.6); margin: 6px 0 0; font-size: 13px;">Your ${isCoordinator ? 'coordinator application' : 'registration'} was not approved</p>
-                    <div style="margin-top: 16px;">
-                        <span style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 6px 20px; border-radius: 30px; font-size: 12px; font-weight: 600; border: 1px solid rgba(239, 68, 68, 0.3);">STATUS: REJECTED</span>
-                    </div>
-                </div>
-
-                <!-- Greeting -->
-                <div style="padding: 24px 32px 0;">
-                    <p style="color: #e2e8f0; font-size: 15px; margin: 0; line-height: 1.6;">Hello <strong style="color: ${cfg.color};">${studentName}</strong></p>
-                    <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0; line-height: 1.6;">
-                        Unfortunately, your ${isCoordinator ? 'request to become an Event Coordinator for' : 'registration for'} the following event has been <strong style="color: #ef4444;">rejected</strong>:
-                    </p>
-                </div>
-
-                <!-- Event Details -->
-                <div style="padding: 20px 32px;">
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 20px; margin-bottom: ${rejectionReason ? '20px' : '0'};">
-                        <div style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;">Event Title</div>
-                        <div style="color: #f1f5f9; font-size: 17px; font-weight: 700;">${eventTitle}</div>
-                    </div>
-
-                    ${rejectionReason ? `
-                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04)); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 12px; padding: 20px;">
-                        <div style="color: #fca5a5; font-size: 13px; font-weight: 700; margin-bottom: 8px;">Reason for Rejection:</div>
-                        <div style="color: #e2e8f0; font-size: 14px; line-height: 1.6;">
-                            ${rejectionReason}
-                        </div>
-                    </div>
-                    ` : ''}
-                </div>
-
-                <!-- Next Steps -->
-                <div style="padding: 0 32px 24px;">
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
-                        <div style="color: #e2e8f0; font-size: 14px; font-weight: 700; margin-bottom: 8px;">Next Steps</div>
-                        <div style="color: #94a3b8; font-size: 13px; line-height: 1.6;">
-                            You may contact the event organizer or administration for more details, or try applying again for future events.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Divider -->
-                <div style="padding: 0 32px;">
-                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
-                </div>
-
-                <!-- Footer -->
-                <div style="padding: 24px 32px 28px; text-align: center;">
-                    <p style="color: #475569; font-size: 18px; margin: 0 0 6px; font-weight: 800;"><span style="color: #3b82f6;">Uni</span><span style="color: #e2e8f0;">Events</span></p>
-                    <p style="color: #475569; font-size: 11px; margin: 0;">Academic Event Management System</p>
-                </div>
-            </div>
-        `
+        subject: `${typeLabel} rejected: ${eventTitle}`,
+        html: body
     });
 };
 
@@ -743,7 +525,7 @@ const sendCoordinatorRoleApprovedEmail = async (studentEmail, studentName) => {
                 <div style="padding: 24px 32px 0;">
                     <p style="color: #e2e8f0; font-size: 15px; margin: 0; line-height: 1.6;">Hello <strong style="color: ${cfg.color};">${studentName}</strong> 🎓</p>
                     <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0; line-height: 1.6;">
-                        Congratulations! The admin has approved your request to become a <strong style="color: ${cfg.color};">Student Coordinator</strong> on UniEvents.
+                        Congratulations! The faculty has approved your request to become a <strong style="color: ${cfg.color};">Student Coordinator</strong> on UniEvents.
                     </p>
                 </div>
 
@@ -818,6 +600,29 @@ const getAdminEmails = async (supabase) => {
     }
 };
 
+// Helper: get faculty emails from database
+const getFacultyEmails = async (supabase) => {
+    try {
+        const { data: facultyRole } = await supabase
+            .from('roles')
+            .select('id')
+            .eq('name', 'faculty')
+            .single();
+        
+        if (!facultyRole) return [];
+        
+        const { data: faculties } = await supabase
+            .from('users')
+            .select('email')
+            .eq('role_id', facultyRole.id);
+        
+        return faculties ? faculties.map(f => f.email) : [];
+    } catch (err) {
+        console.error('Error fetching faculty emails:', err);
+        return [];
+    }
+};
+
 module.exports = {
     sendEmail,
     sendEventCreatedEmail,
@@ -825,12 +630,13 @@ module.exports = {
     sendCoordinatorApprovedEmail,
     sendParticipantRegistrationEmail,
     sendNewEventToAdmin,
-    sendCoordinatorRequestToAdmin,
+    sendCoordinatorRequestToFaculty,
     sendCoordinatorPendingEmail,
     sendCoordinatorRejectedEmail,
     sendCoordinatorRoleApprovedEmail,
     sendRegistrationRejectedEmail,
     sendLoginNotificationEmail,
     sendWelcomeEmail,
-    getAdminEmails
+    getAdminEmails,
+    getFacultyEmails
 };

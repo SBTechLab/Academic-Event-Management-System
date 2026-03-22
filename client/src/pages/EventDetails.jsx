@@ -27,6 +27,24 @@ const EventDetails = () => {
 
     useEffect(() => { fetchEvent(); }, [id]);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchEvent();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [id]);
+
+    // Refresh every 10 seconds for real-time updates
+    useEffect(() => {
+        const interval = setInterval(fetchEvent, 10000);
+        return () => clearInterval(interval);
+    }, [id]);
+
     const fetchEvent = async () => {
         setLoading(true);
         try {

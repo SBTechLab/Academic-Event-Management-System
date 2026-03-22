@@ -21,6 +21,7 @@ import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import EventStats from './pages/EventStats';
 import EventCoordinators from './pages/EventCoordinators';
 import FacultyMyEvents from './pages/FacultyMyEvents';
+import Achievements from './pages/Achievements';
 
 // Redirect logged-in users away from login/signup
 const GuestOnly = () => {
@@ -116,6 +117,7 @@ const router = createBrowserRouter([
             children: [
                 { path: '/student-dashboard',          element: <StudentDashboard /> },
                 { path: '/my-events',                  element: <MyEvents /> },
+                { path: '/achievements',               element: <Achievements /> },
                 { path: '/coordinator/event/:eventId', element: <CoordinatorDashboard /> },
             ],
         }],

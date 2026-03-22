@@ -19,9 +19,13 @@ router.get(
 );
 
 router.put(
-    '/:id/status',
-    authorizeRole(['admin', 'faculty', 'student_coordinator', 'student']),
-    registrationController.updateRegistrationStatus
+    '/:id/approve-coordinator',
+    authorizeRole(['admin', 'faculty']),
+    (req, res) => {
+        req.body.status = 'registered';
+        req.body.coordinator_permissions = req.body.permissions;
+        registrationController.updateRegistrationStatus(req, res);
+    }
 );
 
 module.exports = router;

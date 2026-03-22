@@ -20,7 +20,12 @@ const Signup = () => {
             alert('Registration successful! Please login.');
             navigate('/login');
         } catch (err) {
-            setError(err.message || 'Failed to create an account.');
+            const msg = err?.message || 'Failed to create an account.';
+            if (msg === 'Email already exists. Please log in.') {
+                alert(msg);
+                return;
+            }
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -50,7 +55,7 @@ const Signup = () => {
                             required
                             value={fullName}
                             onChange={e => setFullName(e.target.value)}
-                            placeholder="John Doe"
+                            placeholder="SGP Project"
                             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                         />
                     </div>

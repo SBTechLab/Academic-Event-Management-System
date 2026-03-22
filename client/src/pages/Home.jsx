@@ -38,13 +38,6 @@ const Home = () => {
                         >
                             Browse Events
                         </a>
-
-                        <a 
-                            href="/about"
-                            className="px-8 py-3 text-lg font-semibold text-blue-600 border-2 border-blue-600 rounded-xl hover:bg-blue-50 transition-all duration-300"
-                        >
-                            Learn More
-                        </a>
                     </div>
                 </div>
             </section>
