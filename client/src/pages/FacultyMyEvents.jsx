@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const PAGE_SIZE = 9;
 const BLUE = '#0061ff';
 
-const typeIcon = (t) => ({ technical: '💻', cultural: '🎭', sports: '⚽', workshop: '🛠️', seminar: '📚', competition: '🏆' }[t] || '🎯');
+const typeIcon = (t) => t.charAt(0).toUpperCase();
 
 const FacultyMyEvents = () => {
     const { user, getAuthHeaders } = useAuth();
@@ -42,10 +42,10 @@ const FacultyMyEvents = () => {
     }[s] || 'bg-gray-100 text-gray-600');
 
     const statusLabel = (e) => {
-        if (e.status === 'approved' && isCompleted(e.date, e.time)) return '✓ Completed';
-        if (e.status === 'approved') return '📅 Upcoming';
-        if (e.status === 'pending')  return '⏳ Pending';
-        return '✗ Rejected';
+        if (e.status === 'approved' && isCompleted(e.date, e.time)) return 'Completed';
+        if (e.status === 'approved') return 'Upcoming';
+        if (e.status === 'pending')  return 'Pending';
+        return 'Rejected';
     };
 
     return (
@@ -65,7 +65,7 @@ const FacultyMyEvents = () => {
 
             {events.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-                    <p className="text-5xl mb-4">📭</p>
+                    <p className="text-5xl mb-4 text-gray-300">No Events</p>
                     <p className="text-gray-500 text-lg font-medium">You haven't created any events yet.</p>
                     <Link to="/create-event" className="inline-block mt-4 font-semibold text-sm" style={{ color: BLUE }}>
                         Create your first event →
@@ -94,11 +94,11 @@ const FacultyMyEvents = () => {
                                     </div>
                                     <p className="text-sm text-gray-500 line-clamp-2 mb-3">{event.description}</p>
                                     <div className="text-sm text-gray-600 space-y-1 mb-4">
-                                        <div>📅 {event.date} &nbsp; 🕐 {event.time}</div>
-                                        <div>📍 {event.location}</div>
+                                        <div>Date: {event.date} &nbsp; Time: {event.time}</div>
+                                        <div>Location: {event.location}</div>
                                         {event.rejection_reason && (
                                             <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                                                ✗ {event.rejection_reason}
+                                                Rejection: {event.rejection_reason}
                                             </div>
                                         )}
                                     </div>

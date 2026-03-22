@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { sendCoordinatorRequestToAdmin, sendCoordinatorRejectedEmail, sendCoordinatorRoleApprovedEmail, getAdminEmails } = require('../config/emailService');
 
 // Student: Request to become coordinator
 const requestCoordinator = async (req, res) => {
@@ -14,6 +15,21 @@ const requestCoordinator = async (req, res) => {
                 return res.status(400).json({ error: 'Request already exists' });
             }
             return res.status(400).json({ error: error.message });
+        }
+
+        // Notify admin about new coordinator request
+        try {
+            const { data: student } = await supabase
+                .from('users')
+                .select('full_name, email')
+                .eq('id', req.user.id)
+                .single();
+            const adminEmails = await getAdminEmails(supabase);
+            for (const adminEmail of adminEmails) {
+                await sendCoordinatorRequestToAdmin(adminEmail, student?.full_name || 'A student', student?.email || '');
+            }
+        } catch (emailErr) {
+            console.error('Admin email error:', emailErr);
         }
 
         res.status(201).json(data);
@@ -90,6 +106,20 @@ const reviewRequest = async (req, res) => {
                     user_id: request.student_id,
                     message: 'Your coordinator request has been approved!'
                 }]);
+
+            // Send approval email to student
+            try {
+                const { data: student } = await supabase
+                    .from('users')
+                    .select('full_name, email')
+                    .eq('id', request.student_id)
+                    .single();
+                if (student) {
+                    await sendCoordinatorRoleApprovedEmail(student.email, student.full_name);
+                }
+            } catch (emailErr) {
+                console.error('Email error:', emailErr);
+            }
         } else {
             await supabase
                 .from('notifications')
@@ -97,6 +127,20 @@ const reviewRequest = async (req, res) => {
                     user_id: request.student_id,
                     message: 'Your coordinator request has been rejected.'
                 }]);
+
+            // Send rejection email to student
+            try {
+                const { data: student } = await supabase
+                    .from('users')
+                    .select('full_name, email')
+                    .eq('id', request.student_id)
+                    .single();
+                if (student) {
+                    await sendCoordinatorRejectedEmail(student.email, student.full_name);
+                }
+            } catch (emailErr) {
+                console.error('Email error:', emailErr);
+            }
         }
 
         res.json({ message: `Request ${status}` });

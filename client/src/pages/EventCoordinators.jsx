@@ -56,10 +56,10 @@ const EventCoordinators = () => {
         if (!perms || !Array.isArray(perms) || perms.length === 0)
             return <span className="text-xs text-gray-400 italic">No permissions assigned</span>;
         const labels = {
-            generate_certificates: '📜 Certificates',
-            view_participants: '👥 View Participants',
-            update_schedule: '📅 Update Schedule',
-            add_details: '✏️ Add Details',
+            generate_certificates: 'Certificates',
+            view_participants: 'View Participants',
+            update_schedule: 'Update Schedule',
+            add_details: 'Add Details',
         };
         return perms.map(p => (
             <span key={p} className="inline-block bg-blue-50 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full mr-1">
@@ -120,7 +120,7 @@ const EventCoordinators = () => {
                                 <div>
                                     <p className="font-bold text-gray-900 text-base">{event.title}</p>
                                     <p className="text-sm text-gray-400 mt-0.5">
-                                        📅 {event.date} &nbsp;·&nbsp; 📍 {event.location} &nbsp;·&nbsp;
+                                        Date: {event.date} &nbsp;·&nbsp; Location: {event.location} &nbsp;·&nbsp;
                                         <span className="capitalize">{event.event_type}</span>
                                     </p>
                                 </div>
@@ -146,7 +146,7 @@ const EventCoordinators = () => {
                                             </div>
                                         </div>
                                         <span className="flex-shrink-0 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-                                            ✓ Coordinator
+                                            Coordinator
                                         </span>
                                     </div>
                                 ))}

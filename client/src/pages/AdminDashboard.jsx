@@ -117,7 +117,7 @@ const AdminDashboard = () => {
                         <p className="text-4xl font-bold text-gray-900 mt-2">{faculty.length}</p>
                     </div>
                     <div className="bg-white border border-orange-300 p-6 rounded-2xl shadow-sm">
-                        <p className="text-sm text-orange-600 font-semibold">⚠️ Pending Coordinators</p>
+                        <p className="text-sm text-orange-600 font-semibold">Pending Coordinators</p>
                         <p className="text-4xl font-bold text-orange-600 mt-2">{stats.pendingCoordinators}</p>
                     </div>
                 </div>
@@ -164,22 +164,22 @@ const AdminDashboard = () => {
                                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                                                 isCompleted ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
                                                             }`}>
-                                                                {isCompleted ? '✓ Completed' : '📅 Upcoming'}
+                                                                {isCompleted ? 'Completed' : 'Upcoming'}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <p className="text-gray-600 mt-2 line-clamp-2">{event.description}</p>
                                                     <div className="flex gap-6 text-sm text-gray-500 mt-4">
-                                                        <span>📅 {event.date}</span>
-                                                        <span>🕐 {event.time}</span>
-                                                        <span>📍 {event.location}</span>
+                                                        <span>Date: {event.date}</span>
+                                                        <span>Time: {event.time}</span>
+                                                        <span>Location: {event.location}</span>
                                                     </div>
                                                     <p className="text-sm text-gray-500 mt-2">
                                                         Created by: {event.creator?.full_name || 'Unknown'}
                                                     </p>
                                                     {event.rejection_reason && (
                                                         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                                            <p className="text-xs font-semibold text-red-800 mb-1">❌ Rejection Reason:</p>
+                                                            <p className="text-xs font-semibold text-red-800 mb-1">Rejection Reason:</p>
                                                             <p className="text-sm text-red-900">{event.rejection_reason}</p>
                                                         </div>
                                                     )}

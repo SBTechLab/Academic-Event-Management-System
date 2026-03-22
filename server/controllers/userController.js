@@ -2,6 +2,7 @@ const supabase = require('../config/supabase');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { sendLoginNotificationEmail, sendWelcomeEmail } = require('../config/emailService');
 
 // Generate JWT
 const generateToken = (id, role) => {
@@ -29,6 +30,12 @@ const loginUser = async (req, res) => {
         // 2. Check password
         if (user.password && (await bcrypt.compare(password, user.password))) {
             const role = user.roles?.name || 'student';
+
+            // Send login notification email for admin and student (real emails only)
+            if (role === 'admin' || role === 'student' || role === 'student_coordinator') {
+                sendLoginNotificationEmail(user.email, user.full_name, role)
+                    .catch(err => console.error('Login email error:', err));
+            }
 
             res.json({
                 user: {
@@ -97,6 +104,12 @@ const registerUser = async (req, res) => {
             },
             token: generateToken(userData.id, assignedRole),
         });
+
+        // Send welcome email for student (real emails)
+        if (assignedRole === 'student') {
+            sendWelcomeEmail(userData.email, userData.full_name, assignedRole)
+                .catch(err => console.error('Welcome email error:', err));
+        }
     } catch (err) {
         console.error('Signup Error:', err);
         res.status(500).json({ error: 'Server error' });

@@ -79,9 +79,9 @@ const CoordinatorDashboard = () => {
     if (!event) return <div className="text-center py-10 text-red-500">Event not found</div>;
 
     const tabs = [
-        has('view_participants')    && { key: 'participants', label: '👥 Participants' },
-        has('mark_attendance')      && { key: 'attendance',   label: '✅ Attendance' },
-        has('manage_event_details') && { key: 'details',      label: '📝 Event Details' },
+        has('view_participants')    && { key: 'participants', label: 'Participants' },
+        has('mark_attendance')      && { key: 'attendance',   label: 'Attendance' },
+        has('manage_event_details') && { key: 'details',      label: 'Event Details' },
     ].filter(Boolean);
 
     const onlyParticipants = participants.filter(p => p.role_type === 'participant');
@@ -101,13 +101,13 @@ const CoordinatorDashboard = () => {
                         <h1 className="text-2xl font-extrabold text-gray-900">Coordinator Dashboard</h1>
                         <h2 className="text-lg font-semibold text-gray-600 mt-1">{event.title}</h2>
                         <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-2">
-                            <span>📅 {event.date}</span>
-                            <span>🕐 {event.time}</span>
-                            <span>📍 {event.location}</span>
+                            <span>Date: {event.date}</span>
+                            <span>Time: {event.time}</span>
+                            <span>Location: {event.location}</span>
                         </div>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl flex-shrink-0"
-                        style={{ background: BLUE }}>⭐</div>
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
+                        style={{ background: BLUE }}>C</div>
                 </div>
             </div>
 
@@ -121,7 +121,7 @@ const CoordinatorDashboard = () => {
                         <div className="flex flex-wrap gap-2">
                             {permissions.map(p => (
                                 <span key={p} className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-50 text-blue-700">
-                                    ✓ {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    {p.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </span>
                             ))}
                         </div>
@@ -179,7 +179,7 @@ const CoordinatorDashboard = () => {
                                                 <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
                                                     p.status === 'attended' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                                                 }`}>
-                                                    {p.status === 'attended' ? '✓ Attended' : 'Registered'}
+                                                    {p.status === 'attended' ? 'Attended' : 'Registered'}
                                                 </span>
                                             </div>
                                         ))}
@@ -198,13 +198,13 @@ const CoordinatorDashboard = () => {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <button onClick={() => setAttendanceMode('manual')}
                                                 className="flex flex-col items-center gap-3 p-8 border-2 rounded-2xl hover:shadow-md transition hover:border-blue-400 group">
-                                                <span className="text-5xl">✅</span>
+                                                <span className="text-4xl text-blue-600 font-bold leading-none">✓</span>
                                                 <p className="font-bold text-gray-800 text-lg group-hover:text-blue-600">Mark Attendance</p>
                                                 <p className="text-sm text-gray-400 text-center">Manually mark each participant as present or absent</p>
                                             </button>
                                             <button onClick={() => setAttendanceMode('qr')}
                                                 className="flex flex-col items-center gap-3 p-8 border-2 rounded-2xl hover:shadow-md transition hover:border-blue-400 group">
-                                                <span className="text-5xl">📷</span>
+                                                <span className="text-4xl text-blue-600 font-bold leading-none">QR</span>
                                                 <p className="font-bold text-gray-800 text-lg group-hover:text-blue-600">Generate QR Codes</p>
                                                 <p className="text-sm text-gray-400 text-center">Generate individual QR codes for each participant</p>
                                             </button>
@@ -217,7 +217,7 @@ const CoordinatorDashboard = () => {
                                                 className="text-sm font-semibold hover:opacity-70 transition"
                                                 style={{ color: BLUE }}>← Back</button>
                                             <h3 className="font-bold text-gray-800 text-base">
-                                                {attendanceMode === 'manual' ? '✅ Mark Attendance' : '📷 QR Codes'}
+                                                {attendanceMode === 'manual' ? 'Mark Attendance' : 'QR Codes'}
                                             </h3>
                                         </div>
 
@@ -240,7 +240,7 @@ const CoordinatorDashboard = () => {
                                                                         ? 'bg-green-100 text-green-700 cursor-not-allowed'
                                                                         : 'bg-green-600 text-white hover:bg-green-700'
                                                                 }`}>
-                                                                {p.status === 'attended' ? '✓ Present' : 'Mark Present'}
+                                                                {p.status === 'attended' ? 'Present' : 'Mark Present'}
                                                             </button>
                                                             {p.status === 'attended' && (
                                                                 <button onClick={() => handleMarkAttendance(p.id, false)}
@@ -283,7 +283,7 @@ const CoordinatorDashboard = () => {
                                                         <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
                                                             p.status === 'attended' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                                                         }`}>
-                                                            {p.status === 'attended' ? '✓ Attended' : 'Not yet attended'}
+                                                            {p.status === 'attended' ? 'Attended' : 'Not yet attended'}
                                                         </span>
                                                     </div>
                                                 ))}

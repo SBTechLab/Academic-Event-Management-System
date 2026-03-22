@@ -121,7 +121,7 @@ const FacultyDashboard = () => {
                     <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl shadow-lg p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold">⚠️ {pendingRequests.length} Pending Coordinator Request{pendingRequests.length > 1 ? 's' : ''}</h2>
+                                <h2 className="text-2xl font-bold">{pendingRequests.length} Pending Coordinator Request{pendingRequests.length > 1 ? 's' : ''}</h2>
                                 <p className="text-orange-100 mt-1">Students waiting for approval</p>
                             </div>
                             <a href="#pending-requests" className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition">
@@ -254,7 +254,7 @@ const FacultyDashboard = () => {
                                                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                                     isCompleted ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
                                                 }`}>
-                                                    {isCompleted ? '✓ Completed' : '📅 Upcoming'}
+                                                    {isCompleted ? 'Completed' : 'Upcoming'}
                                                 </span>
                                             )}
                                         </div>
@@ -278,8 +278,8 @@ const FacultyDashboard = () => {
                                                     : 'bg-red-100 text-red-700'
                                             }`}
                                         >
-                                            {event.status === 'approved' ? '✓ Approved' :
-                                             event.status === 'pending' ? '⏳ Pending' : '✗ Rejected'}
+                                            {event.status === 'approved' ? 'Approved' :
+                                             event.status === 'pending' ? 'Pending' : 'Rejected'}
                                         </span>
                                         <Link
                                             to={`/events/${event.id}/edit`}
@@ -316,7 +316,7 @@ const FacultyDashboard = () => {
 
             </div>
 
-            {/* Rejection Modal */}}
+            {/* Rejection Modal */}
             {showRejectModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
@@ -415,7 +415,7 @@ const FacultyDashboard = () => {
                                         className="mt-1 mr-3"
                                     />
                                     <div>
-                                        <div className="font-medium text-gray-900">✅ Mark Attendance</div>
+                                        <div className="font-medium text-gray-900">Mark Attendance</div>
                                         <div className="text-sm text-gray-600">Allow coordinator to mark participant attendance</div>
                                     </div>
                                 </label>
@@ -428,7 +428,7 @@ const FacultyDashboard = () => {
                                         className="mt-1 mr-3"
                                     />
                                     <div>
-                                        <div className="font-medium text-gray-900">👥 View Participants</div>
+                                        <div className="font-medium text-gray-900">View Participants</div>
                                         <div className="text-sm text-gray-600">View list of all registered participants</div>
                                     </div>
                                 </label>
@@ -441,7 +441,7 @@ const FacultyDashboard = () => {
                                         className="mt-1 mr-3"
                                     />
                                     <div>
-                                        <div className="font-medium text-gray-900">✏️ Manage Event Details</div>
+                                        <div className="font-medium text-gray-900">Manage Event Details</div>
                                         <div className="text-sm text-gray-600">Edit event information and details</div>
                                     </div>
                                 </label>
@@ -454,7 +454,7 @@ const FacultyDashboard = () => {
                                         className="mt-1 mr-3"
                                     />
                                     <div>
-                                        <div className="font-medium text-gray-900">📢 Send Announcements</div>
+                                        <div className="font-medium text-gray-900">Send Announcements</div>
                                         <div className="text-sm text-gray-600">Send notifications to participants</div>
                                     </div>
                                 </label>
@@ -467,7 +467,7 @@ const FacultyDashboard = () => {
                                         className="mt-1 mr-3"
                                     />
                                     <div>
-                                        <div className="font-medium text-gray-900">📊 Generate Reports</div>
+                                        <div className="font-medium text-gray-900">Generate Reports</div>
                                         <div className="text-sm text-gray-600">Generate attendance and participation reports</div>
                                     </div>
                                 </label>
@@ -480,7 +480,7 @@ const FacultyDashboard = () => {
                                         className="mt-1 mr-3"
                                     />
                                     <div>
-                                        <div className="font-medium text-gray-900">📋 Manage Registrations</div>
+                                        <div className="font-medium text-gray-900">Manage Registrations</div>
                                         <div className="text-sm text-gray-600">Approve or cancel participant registrations</div>
                                     </div>
                                 </label>

@@ -97,7 +97,7 @@ const CoordinatorReview = () => {
 
                     {/* Student Details */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                        <h2 className="text-xl font-semibold text-blue-800 mb-4">👤 Student Details</h2>
+                        <h2 className="text-xl font-semibold text-blue-800 mb-4">Student Details</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <span className="font-medium text-gray-700">Name:</span>
@@ -124,7 +124,7 @@ const CoordinatorReview = () => {
 
                     {/* Event Details */}
                     <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-                        <h2 className="text-xl font-semibold text-green-800 mb-4">📅 Event Details</h2>
+                        <h2 className="text-xl font-semibold text-green-800 mb-4">Event Details</h2>
                         <div className="space-y-2">
                             <div>
                                 <span className="font-medium text-gray-700">Event:</span>
@@ -147,7 +147,7 @@ const CoordinatorReview = () => {
 
                     {/* Permissions */}
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
-                        <h2 className="text-xl font-semibold text-purple-800 mb-4">🔐 Grant Permissions</h2>
+                        <h2 className="text-xl font-semibold text-purple-800 mb-4">Grant Permissions</h2>
                         <p className="text-gray-600 mb-4 text-sm">Select the permissions you want to grant to this coordinator:</p>
                         
                         <div className="space-y-3">
@@ -159,7 +159,7 @@ const CoordinatorReview = () => {
                                     className="mt-1 mr-3 w-5 h-5"
                                 />
                                 <div>
-                                    <div className="font-semibold text-gray-900">📜 Generate Certificates</div>
+                                    <div className="font-semibold text-gray-900">Generate Certificates</div>
                                     <div className="text-sm text-gray-600">Allow coordinator to generate and issue certificates</div>
                                 </div>
                             </label>
@@ -172,7 +172,7 @@ const CoordinatorReview = () => {
                                     className="mt-1 mr-3 w-5 h-5"
                                 />
                                 <div>
-                                    <div className="font-semibold text-gray-900">👥 View Participant List</div>
+                                    <div className="font-semibold text-gray-900">View Participant List</div>
                                     <div className="text-sm text-gray-600">Allow coordinator to view all registered participants</div>
                                 </div>
                             </label>
@@ -185,7 +185,7 @@ const CoordinatorReview = () => {
                                     className="mt-1 mr-3 w-5 h-5"
                                 />
                                 <div>
-                                    <div className="font-semibold text-gray-900">📅 Update Schedule</div>
+                                    <div className="font-semibold text-gray-900">Update Schedule</div>
                                     <div className="text-sm text-gray-600">Allow coordinator to update event schedule and timing</div>
                                 </div>
                             </label>
@@ -198,7 +198,7 @@ const CoordinatorReview = () => {
                                     className="mt-1 mr-3 w-5 h-5"
                                 />
                                 <div>
-                                    <div className="font-semibold text-gray-900">✏️ Add Event Details</div>
+                                    <div className="font-semibold text-gray-900">Add Event Details</div>
                                     <div className="text-sm text-gray-600">Allow coordinator to add additional event information</div>
                                 </div>
                             </label>
@@ -212,14 +212,14 @@ const CoordinatorReview = () => {
                             disabled={submitting}
                             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
                         >
-                            ✗ Reject Application
+                            Reject Application
                         </button>
                         <button
                             onClick={handleApprove}
                             disabled={submitting}
                             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
                         >
-                            ✓ Approve as Coordinator
+                            Approve as Coordinator
                         </button>
                     </div>
                 </div>

@@ -58,18 +58,18 @@ const MyEvents = () => {
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                                 reg.role_type === 'coordinator' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
                                             }`}>
-                                                {reg.role_type === 'coordinator' ? '⭐ Coordinator' : '👥 Participant'}
+                                                {reg.role_type === 'coordinator' ? 'Coordinator' : 'Participant'}
                                             </span>
                                             {reg.role_type === 'coordinator' && reg.status === 'pending' && (
                                                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-600">
-                                                    ⏳ Waiting for Approval
+                                                    Waiting for Approval
                                                 </span>
                                             )}
                                         </div>
                                         <div className="flex gap-6 text-sm text-gray-600 mb-3">
-                                            <span>📅 {reg.event?.date}</span>
-                                            <span>🕐 {reg.event?.time}</span>
-                                            <span>📍 {reg.event?.location}</span>
+                                            <span>Date: {reg.event?.date}</span>
+                                            <span>Time: {reg.event?.time}</span>
+                                            <span>Location: {reg.event?.location}</span>
                                         </div>
                                         
                                         <div className="flex items-center gap-2">
@@ -81,10 +81,10 @@ const MyEvents = () => {
                                                 reg.status === 'rejected' ? 'bg-red-100 text-red-700' :
                                                 'bg-gray-100 text-gray-700'
                                             }`}>
-                                                {reg.event?.status === 'cancelled' ? '❌ Cancelled' :
-                                                 reg.status === 'registered' ? '✓ Confirmed' :
-                                                 reg.status === 'pending' ? '⏳ Pending Approval' :
-                                                 reg.status === 'rejected' ? '✗ Rejected' :
+                                                {reg.event?.status === 'cancelled' ? 'Cancelled' :
+                                                 reg.status === 'registered' ? 'Confirmed' :
+                                                 reg.status === 'pending' ? 'Pending Approval' :
+                                                 reg.status === 'rejected' ? 'Rejected' :
                                                  reg.status}
                                             </span>
                                         </div>

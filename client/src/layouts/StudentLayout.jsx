@@ -2,9 +2,9 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
-    { to: '/student-dashboard', icon: '🏠', label: 'Dashboard' },
-    { to: '/events', icon: '🎯', label: 'Browse Events' },
-    { to: '/my-events', icon: '📋', label: 'My Events' },
+    { to: '/student-dashboard', label: 'Dashboard' },
+    { to: '/events', label: 'Browse Events' },
+    { to: '/my-events', label: 'My Events' },
 ];
 
 const ORANGE = '#0061ff';
@@ -62,7 +62,6 @@ const StudentLayout = () => {
                                 onMouseEnter={e => { if (!active) { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.color = '#111827'; } }}
                                 onMouseLeave={e => { if (!active) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#6b7280'; } }}
                             >
-                                <span className="text-xl">{item.icon}</span>
                                 <span>{item.label}</span>
                             </Link>
                         );
@@ -86,9 +85,8 @@ const StudentLayout = () => {
                     {/* Logout */}
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 text-sm font-semibold transition-all hover:bg-red-50 hover:text-red-500"
+                        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 text-sm font-semibold transition-all hover:bg-red-50 hover:text-red-500"
                     >
-                        <span className="text-lg">🚪</span>
                         <span>Logout</span>
                     </button>
                 </div>

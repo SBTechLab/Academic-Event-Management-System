@@ -76,7 +76,7 @@ const Events = () => {
                                     ) : (
                                         <div className="w-full h-44 rounded-t-xl flex items-center justify-center text-5xl"
                                             style={{ background: '#eff6ff' }}>
-                                            {event.event_type === 'technical' ? '💻' : event.event_type === 'cultural' ? '🎭' : event.event_type === 'sports' ? '⚽' : event.event_type === 'workshop' ? '🛠️' : event.event_type === 'seminar' ? '📚' : event.event_type === 'competition' ? '🏆' : '🎯'}
+                                            {event.event_type ? event.event_type.charAt(0).toUpperCase() : 'E'}
                                         </div>
                                     )}
                                     <div className="p-5 flex flex-col flex-1">
@@ -87,9 +87,9 @@ const Events = () => {
                                             </span>
                                         </div>
                                         <div className="text-sm text-gray-600 space-y-1 mb-3">
-                                            <div>📅 {new Date(event.date).toLocaleDateString()}</div>
-                                            <div>🕐 {event.time}</div>
-                                            <div>📍 {event.location}</div>
+                                            <div>Date: {new Date(event.date).toLocaleDateString()}</div>
+                                            <div>Time: {event.time}</div>
+                                            <div>Location: {event.location}</div>
                                         </div>
                                         <p className="text-gray-500 text-base mb-4 line-clamp-2 flex-1">{event.description}</p>
                                         <Link

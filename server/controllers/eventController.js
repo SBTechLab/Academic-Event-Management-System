@@ -1,5 +1,5 @@
 const supabase = require('../config/supabase');
-const { sendEventCreatedEmail, sendEventStatusEmail } = require('../config/emailService');
+const { sendEventCreatedEmail, sendEventStatusEmail, sendNewEventToAdmin, getAdminEmails } = require('../config/emailService');
 
 // Get all events
 const getEvents = async (req, res) => {
@@ -89,6 +89,21 @@ const createEvent = async (req, res) => {
             }
         } catch (emailErr) {
             console.error('Email error:', emailErr);
+        }
+
+        // Notify admin about new pending event
+        try {
+            const adminEmails = await getAdminEmails(supabase);
+            const { data: creator } = await supabase
+                .from('users')
+                .select('full_name')
+                .eq('id', req.user.id)
+                .single();
+            for (const adminEmail of adminEmails) {
+                await sendNewEventToAdmin(adminEmail, creator?.full_name || 'A faculty member', title);
+            }
+        } catch (emailErr) {
+            console.error('Admin email error:', emailErr);
         }
 
         res.status(201).json(data);

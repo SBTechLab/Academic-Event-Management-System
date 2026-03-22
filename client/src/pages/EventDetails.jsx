@@ -168,13 +168,13 @@ const EventDetails = () => {
                     {/* Meta info */}
                     <div className="flex flex-wrap gap-4 mb-7">
                         {[
-                            { icon: '📅', text: new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                            { icon: '🕐', text: event.time },
-                            { icon: '📍', text: event.location },
-                            event.event_type && { icon: '🏷️', text: event.event_type },
+                            { icon: 'Date', text: new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) },
+                            { icon: 'Time', text: event.time },
+                            { icon: 'Location', text: event.location },
+                            event.event_type && { icon: 'Type', text: event.event_type },
                         ].filter(Boolean).map((item, i) => (
                             <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2">
-                                <span className="text-lg">{item.icon}</span>
+                                <span className="text-sm font-semibold text-gray-500 uppercase">{item.icon}:</span>
                                 <span className="text-gray-700 font-medium text-base">{item.text}</span>
                             </div>
                         ))}
@@ -189,7 +189,7 @@ const EventDetails = () => {
                     {/* Admin Panel */}
                     {role === 'admin' && (
                         <div className="rounded-xl p-6 mb-6 border" style={{ background: '#eff6ff', borderColor: BLUE }}>
-                            <h3 className="text-lg font-bold mb-4" style={{ color: '#003fa3' }}>📋 Event Management Details</h3>
+                            <h3 className="text-lg font-bold mb-4" style={{ color: '#003fa3' }}>Event Management Details</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base mb-4">
                                 <div><span className="font-semibold text-gray-600">Created by:</span> <span className="text-gray-900 font-bold ml-1">{event.creator?.full_name || 'Unknown'}</span></div>
                                 <div><span className="font-semibold text-gray-600">Email:</span> <span className="text-gray-800 ml-1">{event.creator?.email || 'N/A'}</span></div>
@@ -231,17 +231,17 @@ const EventDetails = () => {
                                     <>
                                         <button onClick={handleApprove} disabled={submitting}
                                             className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-semibold text-base disabled:opacity-50">
-                                            ✓ Approve Event
+                                            Approve Event
                                         </button>
                                         <button onClick={() => setShowRejectModal(true)} disabled={submitting}
                                             className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-semibold text-base disabled:opacity-50">
-                                            ✗ Reject Event
+                                            Reject Event
                                         </button>
                                     </>
                                 )}
                                 <button onClick={() => setShowDeleteModal(true)} disabled={submitting}
                                     className="px-6 py-3 bg-red-700 text-white rounded-xl hover:bg-red-800 transition font-semibold text-base disabled:opacity-50">
-                                    🗑️ Delete Event
+                                    Delete Event
                                 </button>
                             </>
                         ) : role === 'faculty' ? (
@@ -260,9 +260,9 @@ const EventDetails = () => {
                                     }}>
                                         {selectedRole === 'coordinator'
                                             ? registrationStatus === 'pending'
-                                                ? '⏳ Coordinator request submitted'
-                                                : '✓ Approved as Coordinator'
-                                            : '✓ Already Registered for this Event'
+                                                ? 'Coordinator request submitted'
+                                                : 'Approved as Coordinator'
+                                            : 'Already Registered for this Event'
                                         }
                                     </p>
                                     {selectedRole === 'coordinator' && registrationStatus === 'pending' && (
@@ -286,7 +286,7 @@ const EventDetails = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7">
                         <div className="flex justify-between items-center mb-5">
-                            <h3 className="text-xl font-extrabold text-red-700">🗑️ Delete Event</h3>
+                            <h3 className="text-xl font-extrabold text-red-700">Delete Event</h3>
                             <button onClick={() => { setShowDeleteModal(false); setDeleteReason(''); setError(''); }}
                                 className="text-gray-400 hover:text-gray-600 text-3xl leading-none">×</button>
                         </div>
@@ -360,7 +360,7 @@ const EventDetails = () => {
                                     onChange={e => setSelectedRole(e.target.value)}
                                     className="mt-1 mr-3" />
                                 <div>
-                                    <div className="font-bold text-gray-900 text-base">👥 Participant</div>
+                                    <div className="font-bold text-gray-900 text-base">Participant</div>
                                     <div className="text-gray-500 text-sm mt-0.5">Attend and participate in the event</div>
                                 </div>
                             </label>
@@ -372,7 +372,7 @@ const EventDetails = () => {
                                     onChange={e => setSelectedRole(e.target.value)}
                                     className="mt-1 mr-3" />
                                 <div>
-                                    <div className="font-bold text-gray-900 text-base">⭐ Event Coordinator</div>
+                                    <div className="font-bold text-gray-900 text-base">Event Coordinator</div>
                                     <div className="text-gray-500 text-sm mt-0.5">Help organize and manage the event (requires faculty approval)</div>
                                 </div>
                             </label>

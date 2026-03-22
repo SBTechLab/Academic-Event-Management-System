@@ -1,5 +1,5 @@
 const supabase = require('../config/supabase');
-const { sendParticipantRegistrationEmail, sendCoordinatorApprovedEmail } = require('../config/emailService');
+const { sendParticipantRegistrationEmail, sendCoordinatorApprovedEmail, sendRegistrationRejectedEmail, sendCoordinatorPendingEmail } = require('../config/emailService');
 
 // Register for an event
 const registerForEvent = async (req, res) => {
@@ -43,6 +43,16 @@ const registerForEvent = async (req, res) => {
                 const { data: event } = await supabase.from('events').select('title, date, location').eq('id', event_id).single();
                 if (student && event) {
                     await sendParticipantRegistrationEmail(student.email, student.full_name, event.title, event.date, event.location);
+                }
+            } catch (emailErr) {
+                console.error('Email error:', emailErr);
+            }
+        } else if (role_type === 'coordinator') {
+            try {
+                const { data: student } = await supabase.from('users').select('full_name, email').eq('id', student_id).single();
+                const { data: event } = await supabase.from('events').select('title').eq('id', event_id).single();
+                if (student && event) {
+                    await sendCoordinatorPendingEmail(student.email, student.full_name, event.title);
                 }
             } catch (emailErr) {
                 console.error('Email error:', emailErr);
@@ -143,19 +153,25 @@ const updateRegistrationStatus = async (req, res) => {
         }
 
         // Send email if coordinator approved
-        if (status === 'approved' && coordinator_permissions) {
+        if (status === 'registered' && data.role_type === 'coordinator') {
             try {
-                const { data: reg } = await supabase
-                    .from('registrations')
-                    .select('student_id, event_id')
-                    .eq('id', id)
-                    .single();
-                if (reg) {
-                    const { data: student } = await supabase.from('users').select('full_name, email').eq('id', reg.student_id).single();
-                    const { data: event } = await supabase.from('events').select('title').eq('id', reg.event_id).single();
-                    if (student && event) {
-                        await sendCoordinatorApprovedEmail(student.email, student.full_name, event.title, coordinator_permissions);
-                    }
+                const { data: student } = await supabase.from('users').select('full_name, email').eq('id', data.student_id).single();
+                const { data: event } = await supabase.from('events').select('title').eq('id', data.event_id).single();
+                if (student && event) {
+                    await sendCoordinatorApprovedEmail(student.email, student.full_name, event.title, data.coordinator_permissions || []);
+                }
+            } catch (emailErr) {
+                console.error('Email error:', emailErr);
+            }
+        }
+
+        // Send email if registration rejected
+        if (status === 'rejected') {
+            try {
+                const { data: student } = await supabase.from('users').select('full_name, email').eq('id', data.student_id).single();
+                const { data: event } = await supabase.from('events').select('title').eq('id', data.event_id).single();
+                if (student && event) {
+                    await sendRegistrationRejectedEmail(student.email, student.full_name, event.title, rejection_reason, data.role_type);
                 }
             } catch (emailErr) {
                 console.error('Email error:', emailErr);

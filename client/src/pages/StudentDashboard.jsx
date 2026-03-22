@@ -6,17 +6,17 @@ import { fetchWithCache } from '../cacheUtils';
 const PAGE_SIZE = 6;
 
 const eventTypes = [
-    { value: 'all',         label: 'All',         icon: '🎯' },
-    { value: 'technical',   label: 'Technical',   icon: '💻' },
-    { value: 'cultural',    label: 'Cultural',    icon: '🎭' },
-    { value: 'sports',      label: 'Sports',      icon: '⚽' },
-    { value: 'workshop',    label: 'Workshop',    icon: '🛠️' },
-    { value: 'seminar',     label: 'Seminar',     icon: '📚' },
-    { value: 'competition', label: 'Competition', icon: '🏆' },
-    { value: 'general',     label: 'General',     icon: '📌' },
+    { value: 'all',         label: 'All' },
+    { value: 'technical',   label: 'Technical' },
+    { value: 'cultural',    label: 'Cultural' },
+    { value: 'sports',      label: 'Sports' },
+    { value: 'workshop',    label: 'Workshop' },
+    { value: 'seminar',     label: 'Seminar' },
+    { value: 'competition', label: 'Competition' },
+    { value: 'general',     label: 'General' },
 ];
 
-const typeIcon = (t) => ({ technical: '💻', cultural: '🎭', sports: '⚽', workshop: '🛠️', seminar: '📚', competition: '🏆' }[t] || '🎯');
+const typeIcon = (t) => t.charAt(0).toUpperCase();
 
 const StudentDashboard = () => {
     const { user, getAuthHeaders } = useAuth();
@@ -58,7 +58,7 @@ const StudentDashboard = () => {
         <div className="space-y-6">
             {/* Welcome */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user?.full_name} 👋</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user?.full_name}</h1>
                 <p className="text-gray-500 text-sm mt-1">Here's what's happening with events today.</p>
                 <Link to="/my-events" className="inline-block mt-3 text-sm font-semibold" style={{ color: '#0061ff' }}>
                     View My Registrations →
@@ -90,7 +90,7 @@ const StudentDashboard = () => {
                             className={`px-4 py-2 rounded-lg text-base font-semibold transition ${
                                 selectedType === t.value ? 'text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}>
-                            {t.icon} {t.label}
+                            {t.label}
                         </button>
                     ))}
                 </div>
@@ -134,8 +134,8 @@ const StudentDashboard = () => {
                                         </div>
                                         <p className="text-sm text-gray-500 line-clamp-2 mb-4">{event.description}</p>
                                         <div className="text-sm text-gray-600 space-y-1 mb-4">
-                                            <div>📅 {event.date} &nbsp; 🕐 {event.time}</div>
-                                            <div>📍 {event.location}</div>
+                                            <div>Date/Time: {event.date} &nbsp; {event.time}</div>
+                                            <div>Location: {event.location}</div>
                                         </div>
                                         <Link to={`/events/${event.id}`}
                                             style={{ background: '#0061ff' }}

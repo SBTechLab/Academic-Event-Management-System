@@ -114,7 +114,7 @@ const Navbar = () => {
                             className="ml-2 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                             title="Toggle Theme"
                         >
-                            {theme === 'light' ? '🌙' : '☀️'}
+                            {theme === 'light' ? 'Dark' : 'Light'}
                         </button>
 
                     </div>
