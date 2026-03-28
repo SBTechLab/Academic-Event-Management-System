@@ -39,9 +39,9 @@ const CreateEvent = () => {
                 throw new Error(errorData.error || 'Failed to create event');
             }
 
-            const dashboardRoute = role === 'admin' ? '/admin-dashboard' : 
-                                   role === 'faculty' ? '/faculty-dashboard' : 
-                                   '/student-dashboard';
+            const dashboardRoute = role === 'admin' ? '/admin-dashboard' :
+                role === 'faculty' ? '/faculty-dashboard' :
+                    '/student-dashboard';
             navigate(dashboardRoute);
         } catch (err) {
             setError(err.message);

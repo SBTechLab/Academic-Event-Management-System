@@ -56,7 +56,7 @@ const sendEventCreatedEmail = async (facultyEmail, facultyName, eventTitle) => {
 // Send event approved/rejected email to faculty
 const sendEventStatusEmail = async (facultyEmail, facultyName, eventTitle, status, rejectionReason) => {
     const isApproved = status === 'approved';
-    const cfg = isApproved 
+    const cfg = isApproved
         ? { icon: '✅', color: '#34d399', gradient: 'linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #059669 100%)', badgeBg: 'rgba(34, 197, 94, 0.15)', badgeText: '#4ade80', badgeTextLabel: 'APPROVED' }
         : { icon: '❌', color: '#ef4444', gradient: 'linear-gradient(135deg, #0f172a 0%, #450a0a 50%, #7f1d1d 100%)', badgeBg: 'rgba(239, 68, 68, 0.15)', badgeText: '#fca5a5', badgeTextLabel: 'REJECTED' };
 
@@ -122,7 +122,7 @@ const sendCoordinatorApprovedEmail = async (studentEmail, studentName, eventTitl
         update_schedule: '📅 Update Schedule',
         add_details: '✏️ Add Event Details'
     };
-    const permListHtml = permissions.map(p => 
+    const permListHtml = permissions.map(p =>
         `<span style="display: inline-block; background: rgba(124, 58, 237, 0.15); color: #c4b5fd; padding: 6px 14px; border-radius: 6px; font-size: 13px; margin: 0 8px 8px 0; border: 1px solid rgba(124, 58, 237, 0.3);">✓ ${permissionLabels[p] || p}</span>`
     ).join('');
 
@@ -510,7 +510,7 @@ const sendLoginNotificationEmail = async (userEmail, userName, role) => {
     const loginTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     const loginDate = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const roleLabel = role.charAt(0).toUpperCase() + role.replace('_', ' ').slice(1);
-    
+
     const roleConfig = {
         admin: { emoji: '👑', color: '#f59e0b', bgColor: '#451a03', gradient: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%)', tagBg: 'linear-gradient(135deg, #f59e0b, #d97706)', tagText: '#000' },
         student: { emoji: '🎓', color: '#34d399', bgColor: '#022c22', gradient: 'linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #059669 100%)', tagBg: 'linear-gradient(135deg, #34d399, #10b981)', tagText: '#000' },
@@ -803,14 +803,14 @@ const getAdminEmails = async (supabase) => {
             .select('id')
             .eq('name', 'admin')
             .single();
-        
+
         if (!adminRole) return [];
-        
+
         const { data: admins } = await supabase
             .from('users')
             .select('email')
             .eq('role_id', adminRole.id);
-        
+
         return admins ? admins.map(a => a.email) : [];
     } catch (err) {
         console.error('Error fetching admin emails:', err);
