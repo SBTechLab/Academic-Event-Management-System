@@ -1,11 +1,20 @@
--- Ensure admin user exists with proper password
--- Run this in your Supabase SQL editor
+-- Admin specific queries and hotfixes
 
--- First, ensure the password column exists
-ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;
+-- 1. Insert or update the main admin user with a fresh hashed password
+INSERT INTO public.users (id, email, full_name, role_id, password)
+VALUES (
+    gen_random_uuid(),
+    'sbbhalani18@gmail.com',
+    'S. Bhalani',
+    (SELECT id FROM public.roles WHERE name = 'admin'),
+    '$2b$10$X65pYgsE/FPErcum8uSU.OGu77ki9TlT0DJSnr/GYokfdHs06GSyG'
+)
+ON CONFLICT (email) DO UPDATE SET
+    password = '$2b$10$X65pYgsE/FPErcum8uSU.OGu77ki9TlT0DJSnr/GYokfdHs06GSyG',
+    role_id = (SELECT id FROM public.roles WHERE name = 'admin'),
+    full_name = 'S. Bhalani';
 
--- Insert or update admin user with hashed password
--- Password: password123 (bcrypt hashed)
+-- 2. Insert or update the alternate admin user
 INSERT INTO public.users (id, email, full_name, role_id, password)
 VALUES (
     gen_random_uuid(),
@@ -19,9 +28,9 @@ ON CONFLICT (email) DO UPDATE SET
     role_id = (SELECT id FROM public.roles WHERE name = 'admin'),
     full_name = 'S. Bhalani';
 
--- Verify the admin user exists
+-- 3. Verify admin users
 SELECT u.id, u.email, u.full_name, r.name as role, 
        CASE WHEN u.password IS NOT NULL THEN 'Password Set' ELSE 'No Password' END as password_status
 FROM public.users u
 LEFT JOIN public.roles r ON u.role_id = r.id
-WHERE u.email = 'sbbhalani11@gmail.com';
+WHERE r.name = 'admin';

@@ -26,6 +26,24 @@ const FacultyDashboard = () => {
         fetchData();
     }, []);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchData();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // Refresh every 10 seconds to check for updates
+    useEffect(() => {
+        const interval = setInterval(fetchData, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     const fetchData = async () => {
         try {
             const headers = getAuthHeaders();
@@ -104,14 +122,14 @@ const FacultyDashboard = () => {
 
     return (
         <>
-        <div className="max-w-7xl mx-auto space-y-10">
+        <div className="dashboard-shell">
 
                 {/* HEADER */}
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
+                    <h1 className="dashboard-title text-3xl">
                         Faculty Dashboard
                     </h1>
-                    <p className="text-gray-600 mt-1">
+                    <p className="dashboard-subtitle mt-2">
                         Welcome back, <span className="font-medium">{user?.full_name}</span>
                     </p>
                 </div>
@@ -178,7 +196,7 @@ const FacultyDashboard = () => {
 
                 {/* REQUESTS SECTION */}
                 {pendingRequests.length > 0 && (
-                    <div id="pending-requests" className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div id="pending-requests" className="dashboard-card p-8">
                         <h2 className="text-xl font-semibold text-gray-900 mb-6">
                             Pending Coordinator Requests
                         </h2>
@@ -223,7 +241,7 @@ const FacultyDashboard = () => {
                 )}
 
                 {/* RECENT EVENTS */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div className="dashboard-card p-8">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-semibold text-gray-900">My Recent Events</h2>
                         <span className="text-sm text-gray-500">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isEventCompleted } from '../eventUtils';
 
 const BLUE = '#0061ff';
 
@@ -18,6 +19,24 @@ const CoordinatorDashboard = () => {
 
     useEffect(() => { fetchCoordinatorData(); }, [eventId]);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchCoordinatorData();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [eventId]);
+
+    // Refresh every 10 seconds for real-time updates
+    useEffect(() => {
+        const interval = setInterval(fetchCoordinatorData, 10000);
+        return () => clearInterval(interval);
+    }, [eventId]);
+
     const fetchCoordinatorData = async () => {
         try {
             const [eventRes, regRes, myRegRes] = await Promise.all([
@@ -26,7 +45,7 @@ const CoordinatorDashboard = () => {
                 fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }),
             ]);
 
-            if (eventRes.ok) setEvent(await eventRes.ok && eventRes.json());
+            if (eventRes.ok) setEvent(await eventRes.json());
             const regs = regRes.ok ? await regRes.json() : [];
             setParticipants(Array.isArray(regs) ? regs : []);
 
@@ -78,6 +97,8 @@ const CoordinatorDashboard = () => {
     if (loading) return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
     if (!event) return <div className="text-center py-10 text-red-500">Event not found</div>;
 
+    const isCompleted = event && isEventCompleted(event.date, event.time);
+
     const tabs = [
         has('view_participants')    && { key: 'participants', label: 'Participants' },
         has('mark_attendance')      && { key: 'attendance',   label: 'Attendance' },
@@ -109,6 +130,11 @@ const CoordinatorDashboard = () => {
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
                         style={{ background: BLUE }}>C</div>
                 </div>
+                {isCompleted && (
+                    <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3">
+                        <p className="text-sm text-green-700 font-semibold">This event has been completed. Dashboard is in read-only mode.</p>
+                    </div>
+                )}
             </div>
 
             {/* Permissions + Stats */}
@@ -234,15 +260,15 @@ const CoordinatorDashboard = () => {
                                                         <div className="flex gap-2">
                                                             <button
                                                                 onClick={() => handleMarkAttendance(p.id, true)}
-                                                                disabled={p.status === 'attended'}
+                                                                disabled={p.status === 'attended' || isCompleted}
                                                                 className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
-                                                                    p.status === 'attended'
-                                                                        ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                                                                    p.status === 'attended' || isCompleted
+                                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                                                         : 'bg-green-600 text-white hover:bg-green-700'
                                                                 }`}>
                                                                 {p.status === 'attended' ? 'Present' : 'Mark Present'}
                                                             </button>
-                                                            {p.status === 'attended' && (
+                                                            {p.status === 'attended' && !isCompleted && (
                                                                 <button onClick={() => handleMarkAttendance(p.id, false)}
                                                                     className="px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-300 transition">
                                                                     Undo
@@ -275,8 +301,11 @@ const CoordinatorDashboard = () => {
                                                             </>
                                                         ) : (
                                                             <button onClick={() => setQrVisible(prev => ({ ...prev, [p.id]: true }))}
-                                                                className="px-4 py-2 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition"
-                                                                style={{ background: BLUE }}>
+                                                                disabled={isCompleted}
+                                                                className={`px-4 py-2 text-white text-sm font-semibold rounded-xl transition ${
+                                                                    isCompleted ? 'bg-gray-300 cursor-not-allowed' : 'hover:opacity-90'
+                                                                }`}
+                                                                style={isCompleted ? {} : { background: BLUE }}>
                                                                 Show QR Code
                                                             </button>
                                                         )}

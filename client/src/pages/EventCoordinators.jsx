@@ -45,6 +45,76 @@ const EventCoordinators = () => {
         load();
     }, []);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                const load = async () => {
+                    try {
+                        const events = await fetch('http://localhost:5001/api/events?limit=100').then(r => r.json());
+                        const approved = Array.isArray(events) ? events.filter(e => e.status === 'approved') : [];
+
+                        const regs = await Promise.all(
+                            approved.map(e =>
+                                fetch(`http://localhost:5001/api/registrations/event/${e.id}`, { headers: getAuthHeaders() })
+                                    .then(r => r.ok ? r.json() : [])
+                                    .catch(() => [])
+                            )
+                        );
+
+                        const result = approved.map((e, i) => ({
+                            ...e,
+                            coordinators: (Array.isArray(regs[i]) ? regs[i] : []).filter(
+                                r => r.role_type === 'coordinator' && (r.status === 'registered' || r.status === 'approved')
+                            ),
+                        })).filter(e => e.coordinators.length > 0);
+
+                        setRows(result);
+                        const exp = {};
+                        result.forEach(e => { exp[e.id] = true; });
+                        setExpanded(exp);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                };
+                load();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // Refresh every 10 seconds for real-time updates
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            try {
+                const events = await fetch('http://localhost:5001/api/events?limit=100').then(r => r.json());
+                const approved = Array.isArray(events) ? events.filter(e => e.status === 'approved') : [];
+
+                const regs = await Promise.all(
+                    approved.map(e =>
+                        fetch(`http://localhost:5001/api/registrations/event/${e.id}`, { headers: getAuthHeaders() })
+                            .then(r => r.ok ? r.json() : [])
+                            .catch(() => [])
+                    )
+                );
+
+                const result = approved.map((e, i) => ({
+                    ...e,
+                    coordinators: (Array.isArray(regs[i]) ? regs[i] : []).filter(
+                        r => r.role_type === 'coordinator' && (r.status === 'registered' || r.status === 'approved')
+                    ),
+                })).filter(e => e.coordinators.length > 0);
+
+                setRows(result);
+            } catch (err) {
+                console.error('Failed to refresh coordinators:', err);
+            }
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     if (loading) return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
 
     const filtered = rows.filter(r => r.title.toLowerCase().includes(search.toLowerCase()));

@@ -1,0 +1,252 @@
+
+--- add_cancelled_status.sql (569 bytes) ---
+ALTER TABLE public.events 
+DROP CONSTRAINT IF EXISTS events_status_check;
+ALTER TABLE public.events 
+ADD CONSTRAINT events_status_check 
+CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled'));
+...
+
+--- add_coordinator_permissions.sql (870 bytes) ---
+ALTER TABLE public.registrations 
+ADD COLUMN IF NOT EXISTS coordinator_permissions jsonb DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN public.registrations.coordinator_permissions IS 'Array of permissions granted to coordinator: mark_attendance, view_participants, manage_details, send_announcements, etc.';
+SELECT column_name, data_type, column_default
+FROM information_schema.columns
+...
+
+--- add_eligible_years.sql (294 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN eligible_years text[] DEFAULT ARRAY['1', '2', '3', '4'];
+UPDATE public.events 
+SET eligible_years = ARRAY['1', '2', '3', '4'] 
+WHERE eligible_years IS NULL;
+
+--- add_eligible_years_column.sql (301 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN eligible_years text[] DEFAULT ARRAY['1', '2', '3', '4'];
+UPDATE public.events 
+SET eligible_years = ARRAY['1', '2', '3', '4']
+WHERE eligible_years IS NULL;
+
+--- add_event_id_to_coordinator_requests.sql (227 bytes) ---
+ALTER TABLE public.coordinator_requests 
+ADD COLUMN event_id uuid REFERENCES public.events(id) ON DELETE CASCADE;
+
+--- add_event_type.sql (260 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN IF NOT EXISTS event_type text DEFAULT 'general';
+UPDATE public.events 
+SET event_type = 'general' 
+WHERE event_type IS NULL;
+
+--- add_event_type_column.sql (339 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN event_type text CHECK (event_type IN ('seminar', 'workshop', 'technical', 'cultural', 'guest_lecture', 'competition', 'other'));
+UPDATE public.events 
+SET event_type = 'other'
+WHERE event_type IS NULL;
+
+--- add_password_column.sql (831 bytes) ---
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;
+UPDATE public.users SET password = '$2b$10$.ZpWnYLqpOq3yFMWKwQo0OkZLguCs8LShfsTSMZ2Rm3.bctDmiRum' WHERE email = 'sbbhalani11@gmail.com';
+UPDATE public.users SET password = '$2b$10$.ZpWnYLqpOq3yFMWKwQo0OkZLguCs8LShfsTSMZ2Rm3.bctDmiRum' WHERE email = 'rajanimeet2005@gmail.com';
+UPDATE public.users SET password = '$2b$10$.ZpWnYLqpOq3yFMWKwQo0OkZLguCs8LShfsTSMZ2Rm3.bctDmiRum' WHERE email = 'd25ce143@charusat.edu.in';
+UPDATE public.users SET password = '$2b$10$.ZpWnYLqpOq3yFMWKwQo0OkZLguCs8LShfsTSMZ2Rm3.bctDmiRum' WHERE email = 'd24it142@gmail.com';
+
+--- add_permissions_to_registrations.sql (290 bytes) ---
+ALTER TABLE public.registrations 
+ADD COLUMN permissions jsonb DEFAULT '[]'::jsonb;
+
+--- add_rejection_reason.sql (125 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN IF NOT EXISTS rejection_reason text;
+
+--- add_rejection_reason_column.sql (172 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN rejection_reason text;
+
+--- add_rejection_reason_to_registrations.sql (656 bytes) ---
+ALTER TABLE public.registrations 
+ADD COLUMN IF NOT EXISTS rejection_reason text;
+ALTER TABLE public.registrations 
+DROP CONSTRAINT IF EXISTS registrations_status_check;
+ALTER TABLE public.registrations 
+...
+
+--- add_role_type_simple.sql (271 bytes) ---
+ALTER TABLE public.registrations 
+ADD COLUMN IF NOT EXISTS role_type text DEFAULT 'participant';
+UPDATE public.registrations 
+SET role_type = 'participant' 
+WHERE role_type IS NULL;
+
+--- add_role_type_to_registrations.sql (334 bytes) ---
+ALTER TABLE public.registrations 
+ADD COLUMN role_type text CHECK (role_type IN ('participant', 'coordinator')) DEFAULT 'participant';
+UPDATE public.registrations 
+SET role_type = 'participant' 
+WHERE role_type IS NULL;
+
+--- add_update_reason_column.sql (168 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN update_reason text;
+
+--- add_user_year.sql (323 bytes) ---
+ALTER TABLE public.users 
+ADD COLUMN year text CHECK (year IN ('1', '2', '3', '4'));
+UPDATE public.users 
+SET year = '1' 
+WHERE role_id = (SELECT id FROM public.roles WHERE name = 'student') 
+...
+
+--- complete_database_update.sql (795 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN IF NOT EXISTS event_type text DEFAULT 'general';
+ALTER TABLE public.events 
+ADD COLUMN IF NOT EXISTS eligible_years text[] DEFAULT ARRAY['1', '2', '3', '4'];
+UPDATE public.events 
+...
+
+--- coordinator_application_migration.sql (2825 bytes) ---
+CREATE TABLE public.coordinator_applications (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  status TEXT CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+...
+
+--- coordinator_requests_table.sql (552 bytes) ---
+CREATE TABLE IF NOT EXISTS public.coordinator_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  status TEXT CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+  requested_at TIMESTAMPTZ DEFAULT NOW(),
+...
+
+--- create_notifications_table.sql (1012 bytes) ---
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    message text NOT NULL,
+    type text CHECK (type IN ('success', 'warning', 'info', 'error')) DEFAULT 'info',
+...
+
+--- db_schema.sql (4741 bytes) ---
+create extension if not exists "uuid-ossp";
+create table public.roles (
+  id serial primary key,
+  name text not null unique
+);
+...
+
+--- db_seed.sql (7252 bytes) ---
+create extension if not exists "pgcrypto";
+DO $$
+DECLARE
+  role_admin_id int;
+  role_faculty_id int;
+...
+
+--- final_admin_fix.sql (726 bytes) ---
+INSERT INTO public.users (id, email, full_name, role_id, password)
+VALUES (
+    gen_random_uuid(),
+    'sbbhalani18@gmail.com',
+    'S. Bhalani',
+...
+
+--- FINAL_DATABASE_SETUP.sql (1113 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN IF NOT EXISTS event_type text DEFAULT 'general';
+ALTER TABLE public.events 
+ADD COLUMN IF NOT EXISTS eligible_years text[] DEFAULT ARRAY['1', '2', '3', '4'];
+UPDATE public.events 
+...
+
+--- fix_admin_login.sql (978 bytes) ---
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;
+INSERT INTO public.users (id, email, full_name, role_id, password)
+VALUES (
+    gen_random_uuid(),
+    'sbbhalani18@gmail.com',
+...
+
+--- fix_admin_role.sql (332 bytes) ---
+UPDATE public.users 
+SET role_id = (SELECT id FROM public.roles WHERE name = 'admin')
+WHERE email = 'sbbhalani18@gmail.com';
+SELECT u.email, u.full_name, r.name as role 
+FROM public.users u
+...
+
+--- fix_admin_user.sql (1091 bytes) ---
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;
+INSERT INTO public.users (id, email, full_name, role_id, password)
+VALUES (
+    gen_random_uuid(),
+    'sbbhalani11@gmail.com',
+...
+
+--- fix_coordinator_table.sql (1322 bytes) ---
+DROP TABLE IF EXISTS public.coordinator_applications CASCADE;
+CREATE TABLE public.coordinator_applications (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+...
+
+--- FIX_REGISTRATIONS_CORRECTED.sql (1596 bytes) ---
+ALTER TABLE public.registrations 
+ADD COLUMN IF NOT EXISTS role_type text 
+CHECK (role_type IN ('participant', 'coordinator')) 
+DEFAULT 'participant';
+ALTER TABLE public.registrations 
+...
+
+--- fix_rls_policies.sql (1107 bytes) ---
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+DROP POLICY IF EXISTS "Events are viewable by everyone" ON public.events;
+DROP POLICY IF EXISTS "Faculty and Admin can create events" ON public.events;
+DROP POLICY IF EXISTS "Faculty and Admin can update events" ON public.events;
+DROP POLICY IF EXISTS "Students view own registrations" ON public.registrations;
+...
+
+--- fresh_admin.sql (702 bytes) ---
+DELETE FROM public.users WHERE email = 'sbbhalani18@gmail.com';
+INSERT INTO public.users (id, email, full_name, role_id, password)
+VALUES (
+    gen_random_uuid(),
+    'sbbhalani18@gmail.com',
+...
+
+--- RUN_THIS_SQL.sql (1034 bytes) ---
+ALTER TABLE public.registrations 
+ADD COLUMN IF NOT EXISTS role_type text 
+CHECK (role_type IN ('participant', 'coordinator')) 
+DEFAULT 'participant';
+ALTER TABLE public.registrations 
+...
+
+--- RUN_THIS_SQL_FIRST.sql (313 bytes) ---
+ALTER TABLE public.events 
+ADD COLUMN eligible_years text[] DEFAULT ARRAY['1', '2', '3', '4'];
+UPDATE public.events 
+SET eligible_years = ARRAY['1', '2', '3', '4'] 
+WHERE eligible_years IS NULL;
+
+--- VERIFY_AND_FIX_REGISTRATIONS.sql (2172 bytes) ---
+SELECT column_name, data_type, column_default
+FROM information_schema.columns
+WHERE table_name = 'registrations' 
+AND column_name = 'role_type';
+ALTER TABLE public.registrations 
+...
+
+--- verify_coordinator_table.sql (778 bytes) ---
+CREATE TABLE IF NOT EXISTS public.coordinator_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  status TEXT CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+  requested_at TIMESTAMPTZ DEFAULT NOW(),
+...

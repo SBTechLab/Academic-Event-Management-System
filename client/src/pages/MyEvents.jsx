@@ -12,6 +12,24 @@ const MyEvents = () => {
         fetchMyEvents();
     }, []);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchMyEvents();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // Refresh every 10 seconds for real-time updates
+    useEffect(() => {
+        const interval = setInterval(fetchMyEvents, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     const fetchMyEvents = async () => {
         try {
             const response = await fetch('http://localhost:5001/api/registrations/my-registrations', {

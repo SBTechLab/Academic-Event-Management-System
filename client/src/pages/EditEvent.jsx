@@ -74,7 +74,7 @@ const EditEvent = () => {
                 throw new Error(errorData.error || 'Failed to update event');
             }
 
-            const dashboardRoute = role === 'faculty' ? '/faculty-dashboard' : '/admin-dashboard';
+            const dashboardRoute = role === 'faculty' ? '/faculty-my-events' : '/admin-dashboard';
             navigate(dashboardRoute);
         } catch (err) {
             setError(err.message);

@@ -10,6 +10,24 @@ const CoordinatorRequests = () => {
         fetchRequests();
     }, []);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchRequests();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // Refresh every 8 seconds to check for new requests
+    useEffect(() => {
+        const interval = setInterval(fetchRequests, 8000);
+        return () => clearInterval(interval);
+    }, []);
+
     const fetchRequests = async () => {
         try {
             const response = await fetch('http://localhost:5001/api/coordinator-requests/pending', {

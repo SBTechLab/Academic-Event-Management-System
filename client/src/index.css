@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  font-size: 20px;
+}
+
 :root {
   /* Light Theme */
   --color-background: #f8fafc;
@@ -13,13 +17,13 @@
 
 .dark {
   /* Dark Theme */
-  --color-background: #f8fafc;
-  --color-surface: #ffffff;
-  --color-primary: #3674B5;
-  --color-secondary: #578FCA;
-  --color-accent: #46B5D1;
-  --color-card: #ffffff;
-  --color-text: #1f2933;
+  --color-background: #030712;
+  --color-surface: #111827;
+  --color-primary: #60a5fa;
+  --color-secondary: #93c5fd;
+  --color-accent: #0ea5e9;
+  --color-card: #111827;
+  --color-text: #e5e7eb;
 }
 
 body {
@@ -27,6 +31,54 @@ body {
   color: var(--color-text);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Common Tailwind utility overrides for dark theme */
+.dark .bg-white { background-color: #111827 !important; }
+.dark .bg-gray-50 { background-color: #0f172a !important; }
+.dark .bg-gray-100 { background-color: #1f2937 !important; }
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300 { border-color: #374151 !important; }
+.dark .text-gray-900,
+.dark .text-gray-800 { color: #f3f4f6 !important; }
+.dark .text-gray-700,
+.dark .text-gray-600 { color: #d1d5db !important; }
+.dark .text-gray-500,
+.dark .text-gray-400 { color: #9ca3af !important; }
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover { background-color: #1f2937 !important; }
+.dark .hover\:text-gray-700:hover,
+.dark .hover\:text-gray-800:hover { color: #f3f4f6 !important; }
+
+/* Dashboard design system */
+.dashboard-shell {
+  max-width: 84rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dashboard-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-title {
+  color: var(--color-text);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.dashboard-subtitle {
+  color: #64748b;
+}
+
+.dark .dashboard-subtitle {
+  color: #94a3b8;
 }
 
 /* Admin Panel Enhancements */

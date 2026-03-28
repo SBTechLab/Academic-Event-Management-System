@@ -1,17 +1,21 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { BarChart3, CalendarDays, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { Moon, Sun } from 'lucide-react';
 
 const navItems = [
-    { to: '/admin-dashboard',      label: 'Dashboard' },
-    { to: '/event-stats',          label: 'Event Statistics' },
-    { to: '/event-coordinators',   label: 'Event Coordinators' },
-    { to: '/events',               label: 'All Events' },
+    { to: '/admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/event-stats', label: 'Event Statistics', icon: BarChart3 },
+    { to: '/event-coordinators', label: 'Event Coordinators', icon: Users },
+    { to: '/events', label: 'All Events', icon: CalendarDays },
 ];
 
 const BLUE = '#0061ff';
 
 const AdminLayout = () => {
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -48,6 +52,7 @@ const AdminLayout = () => {
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 px-3 mb-4">Navigation</p>
                     {navItems.map(item => {
                         const active = location.pathname === item.to;
+                        const Icon = item.icon;
                         return (
                             <Link
                                 key={item.to}
@@ -57,6 +62,7 @@ const AdminLayout = () => {
                                 onMouseEnter={e => { if (!active) { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.color = '#111827'; } }}
                                 onMouseLeave={e => { if (!active) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#6b7280'; } }}
                             >
+                                <Icon size={18} className="shrink-0 opacity-90" />
                                 <span>{item.label}</span>
                             </Link>
                         );
@@ -79,6 +85,7 @@ const AdminLayout = () => {
                         onClick={handleLogout}
                         className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 text-sm font-semibold transition-all hover:bg-red-50 hover:text-red-500"
                     >
+                        <LogOut size={18} className="shrink-0" />
                         <span>Logout</span>
                     </button>
                 </div>
@@ -95,14 +102,7 @@ const AdminLayout = () => {
                         <p className="text-gray-400 text-sm">Academic Event Management System</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-gray-800 text-sm font-bold">{user?.full_name}</p>
-                            <p className="text-xs font-semibold" style={{ color: BLUE }}>Admin</p>
-                        </div>
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                            style={{ background: BLUE }}>
-                            {initials}
-                        </div>
+                        {/* Theme Toggle Removed */}
                     </div>
                 </header>
 

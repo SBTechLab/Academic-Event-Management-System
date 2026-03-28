@@ -29,6 +29,29 @@ const AdminDashboard = () => {
         fetchDashboardData();
     }, []);
 
+    // Refresh when page becomes visible (tab focus)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchDashboardData();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // Refresh every 8 seconds to check for updates
+    useEffect(() => {
+        const interval = setInterval(fetchDashboardData, 8000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Reset page when tab changes
+    useEffect(() => {
+        setPage(1);
+    }, [activeTab]);
+
     const fetchDashboardData = async () => {
         try {
             clearCache(); // Clear cache to ensure fresh data
@@ -44,20 +67,11 @@ const AdminDashboard = () => {
             });
             setEvents(sortedEvents);
             setFaculty(facultyData);
-            
-            const regsPromises = eventsData.map(e => 
-                fetch(`http://localhost:5001/api/registrations/event/${e.id}`, { headers: getAuthHeaders() })
-                    .then(r => r.ok ? r.json() : [])
-                    .catch(() => [])
-            );
-            const allRegs = (await Promise.all(regsPromises)).flat();
-            const pendingCoords = allRegs.filter(r => r.role_type === 'coordinator' && r.status === 'pending').length;
-            
             setStats({
                 totalEvents: eventsData.length,
                 pendingEvents: eventsData.filter(e => e.status === 'pending').length,
                 totalUsers: 50,
-                pendingCoordinators: pendingCoords
+                pendingCoordinators: 0
             });
             setLoading(false);
         } catch (error) {
@@ -88,18 +102,23 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <div className="dashboard-shell">
+                <div className="dashboard-card p-8">
                     <div className="flex justify-between items-center">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                            <p className="text-gray-500 mt-2">
+                            <h1 className="dashboard-title text-3xl">Admin Dashboard</h1>
+                            <p className="dashboard-subtitle mt-2">
                                 Welcome back, <span className="font-semibold text-blue-600">{user?.full_name}</span>
                             </p>
                         </div>
-                        <Link to="/create-event" className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition font-semibold">
-                            Create Event
-                        </Link>
+                        <div className="flex gap-3 items-center">
+                            <button
+                                onClick={fetchDashboardData}
+                                className="border border-blue-300 text-blue-600 px-4 py-2.5 rounded-xl hover:bg-blue-50 transition font-semibold text-sm"
+                                title="Refresh dashboard">
+                                🔄 Refresh
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -116,13 +135,9 @@ const AdminDashboard = () => {
                         <p className="text-sm text-gray-500">Total Faculty</p>
                         <p className="text-4xl font-bold text-gray-900 mt-2">{faculty.length}</p>
                     </div>
-                    <div className="bg-white border border-orange-300 p-6 rounded-2xl shadow-sm">
-                        <p className="text-sm text-orange-600 font-semibold">Pending Coordinators</p>
-                        <p className="text-4xl font-bold text-orange-600 mt-2">{stats.pendingCoordinators}</p>
-                    </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="dashboard-card overflow-hidden">
                     <div className="flex border-b">
                         <button
                             onClick={() => setActiveTab('overview')}
@@ -254,6 +269,7 @@ const AdminDashboard = () => {
                                 )}
                             </div>
                         )}
+
                     </div>
                 </div>
         </div>
