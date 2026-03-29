@@ -5,6 +5,7 @@ import AdminLayout from './layouts/AdminLayout';
 import FacultyLayout from './layouts/FacultyLayout';
 import StudentLayout from './layouts/StudentLayout';
 import Home from './pages/Home';
+import About from './pages/About';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import StudentDashboard from './pages/StudentDashboard';
@@ -66,6 +67,7 @@ const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
             { index: true, element: <Home /> },
+            { path: '/about', element: <About /> },
             { path: '/dashboard', element: <RequireAuth />, children: [{ index: true, element: <DashboardRedirect /> }] },
             {
                 element: <GuestOnly />,

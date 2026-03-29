@@ -35,8 +35,8 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
                 {/* Logo */}
-                <Link 
-                    to="/" 
+                <Link
+                    to="/"
                     className="text-2xl font-extrabold text-blue-600 tracking-tight hover:text-blue-700 transition-colors"
                 >
                     UniEvents
@@ -45,16 +45,23 @@ const Navbar = () => {
                 {/* Navigation Links */}
                 <div className="flex items-center space-x-8">
 
-                    <Link 
-                        to="/" 
+                    <Link
+                        to="/about"
+                        className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+                    >
+                        About Us
+                    </Link>
+
+                    <Link
+                        to="/"
                         className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
                     >
                         Home
                     </Link>
 
                     {user && (
-                        <Link 
-                            to="/events" 
+                        <Link
+                            to="/events"
                             className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
                         >
                             Events
