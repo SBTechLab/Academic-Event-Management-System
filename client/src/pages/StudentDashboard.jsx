@@ -108,17 +108,17 @@ const StudentDashboard = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-white p-6 rounded-2xl shadow-md" style={{ background: '#0061ff' }}>
-                    <p className="text-blue-100 text-sm font-medium">Available Events</p>
-                    <p className="text-4xl font-bold mt-1">{allEvents.length}</p>
+                <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(0,97,255,0.85), rgba(0,80,208,0.75))', backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(0,97,255,0.25)' }}>
+                    <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Available Events</p>
+                    <p className="text-4xl font-extrabold text-white mt-1">{allEvents.length}</p>
                 </div>
-                <div className="text-white p-6 rounded-2xl shadow-md" style={{ background: '#0050d0' }}>
-                    <p className="text-blue-100 text-sm font-medium">My Registrations</p>
-                    <p className="text-4xl font-bold mt-1">{registrations.length}</p>
+                <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.85), rgba(109,40,217,0.75))', backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(124,58,237,0.25)' }}>
+                    <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>My Registrations</p>
+                    <p className="text-4xl font-extrabold text-white mt-1">{registrations.filter(r => r.status === 'registered' || r.status === 'attended' || r.status === 'pending').length}</p>
                 </div>
-                <div className="text-white p-6 rounded-2xl shadow-md" style={{ background: '#003fa3' }}>
-                    <p className="text-blue-100 text-sm font-medium">Attended</p>
-                    <p className="text-4xl font-bold mt-1">{registrations.filter(r => r.status === 'attended').length}</p>
+                <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.85), rgba(4,120,87,0.75))', backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(5,150,105,0.25)' }}>
+                    <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Participated</p>
+                    <p className="text-4xl font-extrabold text-white mt-1">{registrations.filter(r => r.status === 'attended' || (r.role_type === 'coordinator' && r.status === 'registered')).length}</p>
                 </div>
             </div>
 
@@ -181,7 +181,7 @@ const StudentDashboard = () => {
                                         <Link to={`/events/${event.id}`}
                                             style={{ background: '#0061ff' }}
                                             className="block text-center hover:opacity-90 text-white text-base font-semibold py-2.5 rounded-xl transition mt-auto">
-                                            View & Register
+                                            {isCompleted(event.date, event.time) ? 'See Details' : 'View & Register'}
                                         </Link>
                                     </div>
                                 </div>

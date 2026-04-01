@@ -1,8 +1,9 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, CalendarSearch, LayoutDashboard, LogOut, Award } from 'lucide-react';
+import { CalendarDays, CalendarSearch, LayoutDashboard, LogOut, Award, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Moon, Sun } from 'lucide-react';
+import { useState } from 'react';
 
 const navItems = [
     { to: '/student-dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,6 +19,7 @@ const StudentLayout = () => {
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handleLogout = async () => {
         await logout();

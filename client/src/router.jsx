@@ -8,6 +8,8 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import StudentDashboard from './pages/StudentDashboard';
 import FacultyDashboard from './pages/FacultyDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -24,19 +26,16 @@ import EventCoordinators from './pages/EventCoordinators';
 import FacultyMyEvents from './pages/FacultyMyEvents';
 import Achievements from './pages/Achievements';
 
-// Redirect logged-in users away from login/signup
 const GuestOnly = () => {
     const { user } = useAuth();
     if (user) return <Navigate to="/dashboard" replace />;
     return <Outlet />;
 };
 
-// Require login — redirect to login if not authenticated
 const RequireAuth = ({ allowedRoles }) => {
     const { user, role } = useAuth();
     if (!user) return <Navigate to="/login" replace />;
     if (allowedRoles && !allowedRoles.includes(role)) {
-        // Wrong role — redirect to their correct dashboard
         if (role === 'admin') return <Navigate to="/admin-dashboard" replace />;
         if (role === 'faculty') return <Navigate to="/faculty-dashboard" replace />;
         return <Navigate to="/student-dashboard" replace />;
@@ -44,7 +43,6 @@ const RequireAuth = ({ allowedRoles }) => {
     return <Outlet />;
 };
 
-// Redirect /dashboard to role-specific dashboard
 const DashboardRedirect = () => {
     const { role } = useAuth();
     if (role === 'admin') return <Navigate to="/admin-dashboard" replace />;
@@ -52,7 +50,6 @@ const DashboardRedirect = () => {
     return <Navigate to="/student-dashboard" replace />;
 };
 
-// Dynamic layout wrapper based on role
 const RoleLayout = () => {
     const { role } = useAuth();
     if (role === 'admin') return <AdminLayout />;
@@ -61,7 +58,6 @@ const RoleLayout = () => {
 };
 
 const router = createBrowserRouter([
-    // Public routes
     {
         path: '/',
         element: <MainLayout />,
@@ -72,8 +68,10 @@ const router = createBrowserRouter([
             {
                 element: <GuestOnly />,
                 children: [
-                    { path: '/login',  element: <Login /> },
-                    { path: '/signup', element: <Signup /> },
+                    { path: '/login',           element: <Login /> },
+                    { path: '/signup',          element: <Signup /> },
+                    { path: '/forgot-password', element: <ForgotPassword /> },
+                    { path: '/reset-password',  element: <ResetPassword /> },
                 ],
             },
         ],
@@ -125,7 +123,7 @@ const router = createBrowserRouter([
         }],
     },
 
-    // Shared authenticated routes — layout chosen by role
+    // Shared authenticated routes
     {
         element: <RequireAuth />,
         children: [{
@@ -138,7 +136,6 @@ const router = createBrowserRouter([
         }],
     },
 
-    // Catch-all
     { path: '*', element: <Navigate to="/" replace /> },
 ]);
 

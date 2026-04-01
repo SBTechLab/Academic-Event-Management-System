@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -51,8 +52,8 @@ const CreateEvent = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Create New Event</h2>
+        <div className="max-w-2xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-md border border-gray-200">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Create New Event</h2>
 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -173,18 +174,18 @@ const CreateEvent = () => {
                     />
                 </div>
 
-                <div className="flex items-center justify-end space-x-4">
+                <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4">
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
-                        className="text-gray-600 hover:text-gray-800 font-medium px-4 py-2"
+                        className="w-full sm:w-auto text-gray-600 hover:text-gray-800 font-medium px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none disabled:opacity-50"
+                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none disabled:opacity-50 transition-colors"
                     >
                         {loading ? 'Creating...' : 'Create Event'}
                     </button>

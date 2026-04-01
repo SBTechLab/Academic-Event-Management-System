@@ -28,4 +28,11 @@ router.put(
     }
 );
 
+// Used by FacultyDashboard (approve coordinator) and CoordinatorDashboard (mark attendance)
+router.put(
+    '/:id/status',
+    authorizeRole(['admin', 'faculty', 'student_coordinator']),
+    registrationController.updateRegistrationStatus
+);
+
 module.exports = router;

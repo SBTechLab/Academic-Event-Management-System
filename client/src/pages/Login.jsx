@@ -76,9 +76,7 @@ const Login = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Password
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                         <input
                             type="password"
                             required
@@ -87,6 +85,11 @@ const Login = () => {
                             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                             placeholder="Enter your password"
                         />
+                        <div className="text-right mt-1">
+                            <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline font-medium">
+                                Forgot password?
+                            </Link>
+                        </div>
                     </div>
 
                     <button

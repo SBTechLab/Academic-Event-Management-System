@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { clearCache } from '../cacheUtils';
+import { isEventCompleted } from '../eventUtils';
 
 const BLUE = '#0061ff';
 
@@ -15,6 +16,7 @@ const EventDetails = () => {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const [registrations, setRegistrations] = useState([]);
+    const [participantCount, setParticipantCount] = useState(null);
     const [isRegistered, setIsRegistered] = useState(false);
     const [registrationStatus, setRegistrationStatus] = useState('');
     const [showRoleModal, setShowRoleModal] = useState(false);
@@ -65,9 +67,11 @@ const EventDetails = () => {
                 }
             }
 
-            if (role === 'admin') {
-                const regRes = await fetch(`http://localhost:5001/api/registrations/event/${id}`, { headers: getAuthHeaders() });
-                if (regRes.ok) setRegistrations(await regRes.json());
+            const regRes = await fetch(`http://localhost:5001/api/registrations/event/${id}`, { headers: getAuthHeaders() });
+            if (regRes.ok) {
+                const regs = await regRes.json();
+                if (role === 'admin') setRegistrations(regs);
+                setParticipantCount(regs.filter(r => r.role_type === 'participant' && r.status !== 'rejected').length);
             }
         } catch (err) {
             setError(err.message);
@@ -268,7 +272,16 @@ const EventDetails = () => {
                                 ← Back to Dashboard
                             </button>
                         ) : (role === 'student' || role === 'student_coordinator') ? (
-                            isRegistered ? (
+                            isEventCompleted(event.date, event.time || '00:00:00') ? (
+                                <div className="rounded-xl px-6 py-4 border border-gray-200 bg-gray-50 flex items-center gap-4">
+                                    <div className="text-center">
+                                        <p className="text-3xl font-extrabold text-gray-800">{participantCount ?? '—'}</p>
+                                        <p className="text-sm text-gray-500 mt-1">Students Participated</p>
+                                    </div>
+                                    <div className="h-10 w-px bg-gray-300"></div>
+                                    <p className="text-sm text-gray-500">This event has already been completed.</p>
+                                </div>
+                            ) : isRegistered ? (
                                 <div className="rounded-xl px-6 py-4 border" style={{
                                     background: selectedRole === 'coordinator' && registrationStatus === 'pending' ? '#fff7ed' : '#eff6ff',
                                     borderColor: selectedRole === 'coordinator' && registrationStatus === 'pending' ? '#f97316' : BLUE

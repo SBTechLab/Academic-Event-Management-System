@@ -84,22 +84,22 @@ const EditEvent = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Edit Event</h2>
+        <div className="max-w-2xl p-8 mx-auto bg-white border border-gray-200 rounded-lg shadow-md">
+            <h2 className="mb-6 text-2xl font-bold text-gray-800">Edit Event</h2>
 
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div className="px-4 py-3 mb-4 text-red-700 bg-red-100 border border-red-400 rounded">
                     {error}
                 </div>
             )}
 
             <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
+                    <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="title">
                         Event Title
                     </label>
                     <input
-                        className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                         id="title"
                         name="title"
                         type="text"
@@ -110,11 +110,11 @@ const EditEvent = () => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="event_type">
+                    <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="event_type">
                         Event Type
                     </label>
                     <select
-                        className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                         id="event_type"
                         name="event_type"
                         required
@@ -132,11 +132,11 @@ const EditEvent = () => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                    <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="description">
                         Description
                     </label>
                     <textarea
-                        className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                         id="description"
                         name="description"
                         rows="4"
@@ -145,13 +145,13 @@ const EditEvent = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2">
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
+                        <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="date">
                             Date
                         </label>
                         <input
-                            className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                             id="date"
                             name="date"
                             type="date"
@@ -161,11 +161,11 @@ const EditEvent = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="time">
+                        <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="time">
                             Time
                         </label>
                         <input
-                            className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                             id="time"
                             name="time"
                             type="time"
@@ -177,11 +177,11 @@ const EditEvent = () => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">
+                    <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="location">
                         Location
                     </label>
                     <input
-                        className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                         id="location"
                         name="location"
                         type="text"
@@ -192,11 +192,11 @@ const EditEvent = () => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image_url">
+                    <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="image_url">
                         Image URL (Optional)
                     </label>
                     <input
-                        className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                         id="image_url"
                         name="image_url"
                         type="url"
@@ -207,11 +207,11 @@ const EditEvent = () => {
                 </div>
 
                 <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="update_reason">
+                    <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor="update_reason">
                         Reason for Update <span className="text-red-500">*</span>
                     </label>
                     <textarea
-                        className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 leading-tight text-gray-700 border border-gray-300 rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                         id="update_reason"
                         name="update_reason"
                         rows="3"
@@ -226,14 +226,14 @@ const EditEvent = () => {
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
-                        className="text-gray-600 hover:text-gray-800 font-medium px-4 py-2"
+                        className="px-4 py-2 font-medium text-gray-600 hover:text-gray-800"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none disabled:opacity-50"
+                        className="px-6 py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none disabled:opacity-50"
                     >
                         {loading ? 'Updating...' : 'Update Event'}
                     </button>

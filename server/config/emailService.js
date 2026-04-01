@@ -840,6 +840,38 @@ const sendCoordinatorRoleApprovedEmail = async (studentEmail, studentName) => {
     });
 };
 
+// Send password reset email
+const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
+    await transporter.sendMail({
+        from: `"UniEvents" <${process.env.EMAIL_USER}>`,
+        to: userEmail,
+        subject: `Reset Your Password — UniEvents`,
+        html: `
+            <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:620px;margin:0 auto;background:#0f172a;border-radius:20px;overflow:hidden;">
+                <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%);padding:30px 32px 24px;text-align:center;">
+                    <div style="width:60px;height:60px;margin:0 auto 14px;background:rgba(255,255,255,0.1);border-radius:50%;border:2px solid rgba(255,255,255,0.15);">
+                        <span style="font-size:28px;line-height:60px;">🔑</span>
+                    </div>
+                    <h1 style="color:#fff;margin:0;font-size:22px;font-weight:800;">Password Reset Request</h1>
+                    <p style="color:rgba(255,255,255,0.6);margin:6px 0 0;font-size:13px;">Click the button below to reset your password</p>
+                </div>
+                <div style="padding:28px 32px;">
+                    <p style="color:#e2e8f0;font-size:15px;margin:0;">Hello <strong style="color:#60a5fa;">${userName}</strong>,</p>
+                    <p style="color:#94a3b8;font-size:13px;margin:12px 0 24px;line-height:1.6;">We received a request to reset your password. This link expires in <strong style="color:#f59e0b;">10 minutes</strong>. If you didn't request this, ignore this email.</p>
+                    <div style="text-align:center;">
+                        <a href="${resetLink}" style="display:inline-block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:14px 36px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;">Reset My Password</a>
+                    </div>
+                    <p style="color:#475569;font-size:12px;margin:24px 0 0;text-align:center;">Or copy this link: <span style="color:#60a5fa;word-break:break-all;">${resetLink}</span></p>
+                </div>
+                <div style="padding:16px 32px 28px;text-align:center;border-top:1px solid rgba(255,255,255,0.06);">
+                    <p style="color:#475569;font-size:18px;margin:0 0 4px;font-weight:800;"><span style="color:#3b82f6;">Uni</span><span style="color:#e2e8f0;">Events</span></p>
+                    <p style="color:#475569;font-size:11px;margin:0;">Academic Event Management System</p>
+                </div>
+            </div>
+        `
+    });
+};
+
 // Generic send email function
 const sendEmail = async ({ to, subject, html }) => {
     await transporter.sendMail({
@@ -875,6 +907,7 @@ const getAdminEmails = async (supabase) => {
 
 module.exports = {
     sendEmail,
+    sendPasswordResetEmail,
     sendEventCreatedEmail,
     sendEventStatusEmail,
     sendCoordinatorApprovedEmail,

@@ -47,7 +47,8 @@ const FacultyDashboard = () => {
     const fetchData = async () => {
         try {
             const headers = getAuthHeaders();
-            const eventsData = await fetchWithCache('http://localhost:5001/api/events?limit=50');
+            const eventsRes = await fetch(`http://localhost:5001/api/events?limit=50&_=${Date.now()}`);
+            const eventsData = await eventsRes.json();
             const facultyEvents = eventsData.filter(e => e.created_by === user.id);
             setMyEvents(facultyEvents);
             
@@ -74,34 +75,29 @@ const FacultyDashboard = () => {
     };
 
     const handleRequestAction = async (requestId, status, permissions = []) => {
+        // Optimistically remove from UI immediately
+        setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+        setShowRejectModal(false);
+        setShowDetailsModal(false);
+        setRejectionReason('');
+        setSelectedRequest(null);
+        setSelectedPermissions([]);
+
         try {
             const body = { status };
-            if (status === 'rejected' && rejectionReason) {
-                body.rejection_reason = rejectionReason;
-            }
-            if (status === 'registered' && permissions.length > 0) {
-                body.coordinator_permissions = permissions;
-            }
-            
-            const response = await fetch(
+            if (status === 'rejected' && rejectionReason) body.rejection_reason = rejectionReason;
+            if (status === 'registered' && permissions.length > 0) body.coordinator_permissions = permissions;
+
+            await fetch(
                 `http://localhost:5001/api/registrations/${requestId}/status`,
-                {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(body)
-                }
+                { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify(body) }
             );
 
-            if (response.ok) {
-                setShowRejectModal(false);
-                setShowDetailsModal(false);
-                setRejectionReason('');
-                setSelectedRequest(null);
-                setSelectedPermissions([]);
-                fetchData();
-            }
+            // Re-fetch to sync with server
+            fetchData();
         } catch (err) {
             console.error(err);
+            fetchData(); // Re-fetch even on error to restore correct state
         }
     };
 
@@ -150,46 +146,21 @@ const FacultyDashboard = () => {
                 )}
 
                 {/* STATS SECTION */}
-                <div className="grid gap-6 md:grid-cols-3">
-
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <p className="text-sm text-gray-500 font-medium uppercase">
-                            My Events
-                        </p>
-                        <p className="text-4xl font-bold text-gray-900 mt-3">
-                            {myEvents.length}
-                        </p>
-                        <Link
-                            to="/events"
-                            className="text-blue-600 text-sm mt-4 inline-block hover:underline"
-                        >
-                            View all events →
-                        </Link>
+                <div className="grid gap-4 md:grid-cols-3">
+                    <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(0,97,255,0.85), rgba(0,80,208,0.75))', backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(0,97,255,0.25)' }}>
+                        <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>My Events</p>
+                        <p className="text-4xl font-extrabold text-white mt-1">{myEvents.length}</p>
+                        <Link to="/events" className="text-xs font-semibold mt-2 inline-block" style={{ color: 'rgba(255,255,255,0.75)' }}>View all →</Link>
                     </div>
-
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <p className="text-sm text-gray-500 font-medium uppercase">
-                            Pending Requests
-                        </p>
-                        <p className="text-4xl font-bold text-gray-900 mt-3">
-                            {pendingRequests.length}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-4">
-                            Awaiting approval
-                        </p>
+                    <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.85), rgba(217,119,6,0.75))', backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(245,158,11,0.25)' }}>
+                        <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Pending Requests</p>
+                        <p className="text-4xl font-extrabold text-white mt-1">{pendingRequests.length}</p>
+                        <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.75)' }}>Awaiting approval</p>
                     </div>
-
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
-                        <div>
-                            <p className="text-sm text-gray-500 font-medium uppercase">
-                                Quick Action
-                            </p>
-                        </div>
-                        <Link
-                            to="/create-event"
-                            className="mt-6 text-center bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-medium"
-                        >
-                            Create New Event
+                    <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.85), rgba(4,120,87,0.75))', backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(5,150,105,0.25)' }}>
+                        <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>Quick Action</p>
+                        <Link to="/create-event" className="mt-3 inline-block text-center bg-white px-4 py-2 rounded-lg hover:opacity-90 transition font-semibold text-sm" style={{ color: '#059669' }}>
+                            + Create Event
                         </Link>
                     </div>
                 </div>

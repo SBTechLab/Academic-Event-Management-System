@@ -1,0 +1,68 @@
+Academic Event Management System - Technical Summary
+
+1. Email Verification:
+- Uses Nodemailer for sending verification and notification emails.
+- All emails are sent in plain text format (no HTML styling).
+
+2. Password Hashing:
+- Uses bcrypt for securely hashing user passwords before storing in the database.
+
+3. Middlewares:
+- JWT Middleware: Handles authentication using JSON Web Tokens.
+- Role Middleware: Checks user roles for protected routes.
+
+4. Cookies and Session:
+- Uses HTTP-only cookies for storing JWT tokens (stateless authentication).
+- No server-side session storage; authentication is token-based.
+
+5. React Features:
+- Uses React Router for navigation.
+- Context API for authentication and theme management.
+- Modern UI with Tailwind CSS.
+- Added: Custom layouts for Admin, Faculty, Student, and Coordinator.
+
+6. Image Upload:
+- Uses Supabase Storage for uploading and storing images (e.g., event banners).
+
+7. Database Limitations:
+- Uses PostgreSQL (via Supabase).
+- Row and storage limits depend on Supabase plan.
+- No support for extremely large files or unbounded data.
+
+8. Database Schemas:
+- Tables: users, events, registrations, roles, notifications, coordinator_requests.
+- Each table has clear relationships (foreign keys for user/event IDs).
+
+9. File Directory Structure:
+- client/: React frontend code (components, pages, layouts, assets).
+- server/: Node.js backend (routes, controllers, config, middleware).
+- database_sql/: SQL scripts for schema and queries.
+- rules/: Markdown docs for API, roles, security, etc.
+
+10. Bcrypt Password Hashing:
+- Bcrypt is a password hashing function that uses a salt to protect against rainbow table attacks.
+- How it works: When a user registers, their password is hashed with bcrypt (cost factor 10-12), and the hash is stored in the database. During login, the entered password is hashed and compared to the stored hash.
+
+11. JWT Token:
+- JWT (JSON Web Token) is a compact, URL-safe means of representing claims to be transferred between two parties.
+- How it works here: After login, a JWT is generated containing user ID and role, signed with a secret key. It's sent to the client in an HTTP-only cookie. For each request, the token is verified to authenticate the user.
+- What we store: User ID, role, and expiration time (no sensitive data like passwords).
+
+12. User Capacity:
+- Depends on Supabase plan: Free tier allows up to 500 MB database, 50,000 monthly active users. Paid plans scale up to millions of users.
+- Current setup can handle thousands of concurrent users with proper optimization.
+
+13. Event Deletion Behavior:
+- When admin deletes an event: The event record is removed from the events table.
+- For students: All registrations for that event are automatically deleted (CASCADE delete), so students lose their registration records and are no longer registered.
+- For coordinators: Coordinator requests for that event are deleted, and if assigned as coordinator, the assignment is removed.
+- Notifications: Event-related notifications remain in the database unless manually cleaned up (no direct cascade from event deletion).
+
+14. Certificate Generation:
+- Certificates are generated client-side using JavaScript in the browser.
+- Technologies used: Pure JavaScript (window.open(), document.write(), window.print() browser APIs), no external libraries.
+- How it works: User clicks "Download Certificate" in Achievements page, which creates HTML content with user/event details, opens a new window, and triggers print dialog for download/printing.
+- Types: Participation certificates for attendees, Coordinator Achievement certificates for approved coordinators.
+- Permissions: Coordinators need "generate_certificates" permission to issue certificates.
+
+This summary covers the main technical points for presenting your website.

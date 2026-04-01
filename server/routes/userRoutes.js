@@ -7,6 +7,8 @@ const authorizeRole = require('../middleware/roleMiddleware');
 // Public routes
 router.post('/login', userController.loginUser);
 router.post('/signup', userController.registerUser);
+router.post('/forgot-password', userController.forgotPassword);
+router.post('/reset-password', userController.resetPassword);
 
 // Protected routes
 router.use(protect);

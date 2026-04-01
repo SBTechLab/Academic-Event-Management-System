@@ -7,6 +7,7 @@ ADD CONSTRAINT events_status_check
 CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled'));
 ...
 
+
 --- add_coordinator_permissions.sql (870 bytes) ---
 ALTER TABLE public.registrations 
 ADD COLUMN IF NOT EXISTS coordinator_permissions jsonb DEFAULT '[]'::jsonb;
