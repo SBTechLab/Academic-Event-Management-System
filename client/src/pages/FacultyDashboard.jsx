@@ -14,6 +14,7 @@ const FacultyDashboard = () => {
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedPermissions, setSelectedPermissions] = useState([]);
     const [page, setPage] = useState(1);
+    const [search, setSearch] = useState('');
     const PAGE_SIZE = 8;
 
     const isEventCompleted = (eventDate, eventTime) => {
@@ -49,7 +50,9 @@ const FacultyDashboard = () => {
             const headers = getAuthHeaders();
             const eventsRes = await fetch(`http://localhost:5001/api/events?limit=50&_=${Date.now()}`);
             const eventsData = await eventsRes.json();
-            const facultyEvents = eventsData.filter(e => e.created_by === user.id);
+            const facultyEvents = eventsData
+                .filter(e => e.created_by === user.id)
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             setMyEvents(facultyEvents);
             
             if (facultyEvents.length > 0) {
@@ -213,11 +216,20 @@ const FacultyDashboard = () => {
 
                 {/* RECENT EVENTS */}
                 <div className="dashboard-card p-8">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
                         <h2 className="text-xl font-semibold text-gray-900">My Recent Events</h2>
-                        <span className="text-sm text-gray-500">
-                            {myEvents.length} events · Page {page} of {Math.ceil(myEvents.length / PAGE_SIZE) || 1}
-                        </span>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                placeholder="Search events..."
+                                className="w-full sm:w-56 px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                            <span className="text-sm text-gray-500 whitespace-nowrap">
+                                {myEvents.filter(e => e.title.toLowerCase().includes(search.toLowerCase())).length} events
+                            </span>
+                        </div>
                     </div>
 
                     {myEvents.length === 0 ? (
@@ -227,7 +239,10 @@ const FacultyDashboard = () => {
                     ) : (
                         <>
                         <div className="divide-y divide-gray-200">
-                            {myEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(event => {
+                            {myEvents
+                                .filter(e => e.title.toLowerCase().includes(search.toLowerCase()))
+                                .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+                                .map(event => {
                                 const isCompleted = isEventCompleted(event.date, event.time);
                                 return (
                                 <div
@@ -280,20 +295,20 @@ const FacultyDashboard = () => {
                                 </div>
                             );})}
                         </div>
-                        {Math.ceil(myEvents.length / PAGE_SIZE) > 1 && (
+                        {Math.ceil(myEvents.filter(e => e.title.toLowerCase().includes(search.toLowerCase())).length / PAGE_SIZE) > 1 && (
                             <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-200">
                                 <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
                                     className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
                                     ← Prev
                                 </button>
-                                {Array.from({ length: Math.ceil(myEvents.length / PAGE_SIZE) }, (_, i) => i + 1).map(p => (
+                                {Array.from({ length: Math.ceil(myEvents.filter(e => e.title.toLowerCase().includes(search.toLowerCase())).length / PAGE_SIZE) }, (_, i) => i + 1).map(p => (
                                     <button key={p} onClick={() => setPage(p)}
                                         style={p === page ? { background: '#0061ff' } : {}}
                                         className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
                                             p === page ? 'text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
                                         }`}>{p}</button>
                                 ))}
-                                <button onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(myEvents.length / PAGE_SIZE)}
+                                <button onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(myEvents.filter(e => e.title.toLowerCase().includes(search.toLowerCase())).length / PAGE_SIZE)}
                                     className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
                                     Next →
                                 </button>
