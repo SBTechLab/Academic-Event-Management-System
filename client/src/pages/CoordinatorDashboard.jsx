@@ -93,7 +93,7 @@ const CoordinatorDashboard = () => {
             if (myRegRes.ok) {
                 const myRegs = await myRegRes.json();
                 const myCoordReg = (Array.isArray(myRegs) ? myRegs : []).find(r =>
-                    r.event_id === eventId && r.role_type === 'coordinator' && r.status === 'registered'
+                    String(r.event_id) === String(eventId) && r.role_type === 'coordinator' && r.status === 'registered'
                 );
                 const perms = Array.isArray(myCoordReg?.coordinator_permissions) ? myCoordReg.coordinator_permissions : [];
                 setPermissions(perms);
@@ -125,11 +125,15 @@ const CoordinatorDashboard = () => {
         try {
             const res = await fetch(`http://localhost:5001/api/registrations/${regId}/status`, {
                 method: 'PUT',
-                headers: getAuthHeaders(),
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: attended ? 'attended' : 'registered' })
             });
             if (res.ok) fetchCoordinatorData();
-            else console.error('Failed:', await res.json());
+            else {
+                const err = await res.json();
+                console.error('Mark attendance failed:', err);
+                alert(err.error || 'Failed to update attendance');
+            }
         } catch (err) { console.error(err); }
     };
 
@@ -271,10 +275,10 @@ const CoordinatorDashboard = () => {
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => handleMarkAttendance(p.id, true)}
-                                                        disabled={p.status === 'attended' || isCompleted}
+                                                        disabled={p.status === 'attended'}
                                                         className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
-                                                            p.status === 'attended' || isCompleted
-                                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                            p.status === 'attended'
+                                                                ? 'bg-green-100 text-green-700 cursor-not-allowed'
                                                                 : 'bg-green-600 text-white hover:bg-green-700'
                                                         }`}>
                                                         {p.status === 'attended' ? 'Present ✓' : 'Mark Present'}
