@@ -80,12 +80,6 @@ const AdminDashboard = () => {
                             Welcome back, <span className="font-semibold text-blue-600">{user?.full_name}</span>
                         </p>
                     </div>
-                    <button
-                        onClick={fetchDashboardData}
-                        className="border border-blue-300 text-blue-600 px-4 py-2.5 rounded-xl hover:bg-blue-50 transition font-semibold text-sm"
-                        title="Refresh dashboard">
-                        Refresh
-                    </button>
                 </div>
             </div>
 
@@ -132,7 +126,7 @@ const AdminDashboard = () => {
                                 {events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((event) => {
                                     const isCompleted = isEventCompleted(event.date, event.time);
                                     return (
-                                    <div key={event.id} className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                                    <div key={event.id} className="bg-gray-50 border border-gray-200 rounded-xl p-6 cursor-pointer hover:shadow-md hover:border-blue-300 transition" onClick={() => navigate(`/events/${event.id}`)}>
                                         <div className="flex justify-between">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-2 flex-wrap">

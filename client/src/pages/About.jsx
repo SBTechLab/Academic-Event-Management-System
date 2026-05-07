@@ -87,7 +87,7 @@ const About = () => {
                         {/* Rounded shapes mimicking reference: Top-left semi curved, etc */}
                         <div className="rounded-tl-[8rem] rounded-tr-[1rem] rounded-bl-[1rem] rounded-br-[8rem] overflow-hidden">
                             <img 
-                                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3EF3mMy_7Y_E-ZiemStZFU1kcT_TS8rmnOA&s" 
                                 alt="Professional meeting" 
                                 className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
                             />

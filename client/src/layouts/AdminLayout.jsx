@@ -1,15 +1,14 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarDays, LayoutDashboard, LogOut, Users, Menu, X } from 'lucide-react';
+import { BarChart3, CalendarDays, Calendar, LayoutDashboard, LogOut, Users, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
-    { to: '/admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/event-stats', label: 'Event Statistics', icon: BarChart3 },
+    { to: '/admin-dashboard',  label: 'Dashboard',          icon: LayoutDashboard },
+    { to: '/event-stats',      label: 'Event Statistics',    icon: BarChart3 },
+    { to: '/event-calendar',   label: 'Event Calendar',      icon: Calendar },
     { to: '/event-coordinators', label: 'Event Coordinators', icon: Users },
-    { to: '/events', label: 'All Events', icon: CalendarDays },
+    { to: '/events',           label: 'All Events',          icon: CalendarDays },
 ];
 
 const BLUE = '#0061ff';
@@ -73,7 +72,7 @@ const SidebarContent = ({ navItems, location, user, initials, handleLogout, onCl
             </div>
             <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 text-sm font-semibold transition-all hover:bg-red-50 hover:text-red-500"
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl text-red-500 bg-red-50 text-sm font-semibold transition-all hover:bg-red-100"
             >
                 <LogOut size={18} className="shrink-0" />
                 <span>Logout</span>
@@ -84,7 +83,6 @@ const SidebarContent = ({ navItems, location, user, initials, handleLogout, onCl
 
 const AdminLayout = () => {
     const { user, logout } = useAuth();
-    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -143,7 +141,7 @@ const AdminLayout = () => {
                         </button>
                         <div>
                             <h2 className="text-gray-900 font-bold text-lg">
-                                {navItems.find(n => location.pathname.startsWith(n.to))?.label || 'Admin Portal'}
+                                {navItems.find(n => location.pathname === n.to)?.label || 'Admin Portal'}
                             </h2>
                             <p className="text-gray-400 text-sm">Academic Event Management System</p>
                         </div>

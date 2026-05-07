@@ -7,6 +7,7 @@ const MyEvents = () => {
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [displayCount, setDisplayCount] = useState(10);
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
         fetchMyEvents();
@@ -53,8 +54,28 @@ const MyEvents = () => {
     return (
         <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h1 className="text-3xl font-bold text-gray-800">My Events</h1>
-                    <p className="text-gray-500 mt-1">Your event registrations and coordinator roles</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-800">My Events</h1>
+                            <p className="text-gray-500 mt-1">Your event registrations and coordinator roles</p>
+                        </div>
+                        <div className="relative">
+                            <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+                                </svg>
+                            </span>
+                            <input
+                                type="text"
+                                placeholder="Search events..."
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                className="pl-9 pr-4 py-2.5 w-64 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:border-transparent transition"
+                                style={{ '--tw-ring-color': '#0061ff' }}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {registrations.length === 0 ? (
@@ -67,7 +88,7 @@ const MyEvents = () => {
                 ) : (
                     <>
                     <div className="grid grid-cols-1 gap-6">
-                        {registrations.slice(0, displayCount).map((reg) => (
+                        {registrations.filter(r => r.event?.title?.toLowerCase().includes(search.toLowerCase())).slice(0, displayCount).map((reg) => (
                             <div key={reg.id} className="bg-white rounded-xl shadow-lg p-6">
                                 <div className="flex justify-between items-start">
                                     <div className="flex-1">

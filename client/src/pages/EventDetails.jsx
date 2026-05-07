@@ -215,12 +215,15 @@ const EventDetails = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base mb-4">
                                 <div><span className="font-semibold text-gray-600">Created by:</span> <span className="text-gray-900 font-bold ml-1">{event.creator?.full_name || 'Unknown'}</span></div>
                                 <div><span className="font-semibold text-gray-600">Email:</span> <span className="text-gray-800 ml-1">{event.creator?.email || 'N/A'}</span></div>
-                                <div><span className="font-semibold text-gray-600">Registrations:</span> <span className="text-gray-800 ml-1">{registrations.length} participants</span></div>
+                                {event.status === 'approved' && (
+                                    <div><span className="font-semibold text-gray-600">Registrations:</span> <span className="text-gray-800 ml-1">{registrations.length} participants</span></div>
+                                )}
+                                <div><span className="font-semibold text-gray-600">Eligible Years:</span> <span className="text-gray-800 ml-1">{event.eligible_years && event.eligible_years.length > 0 ? event.eligible_years.map(y => `Year ${y}`).join(', ') : 'All Years'}</span></div>
                                 {event.update_reason && (
                                     <div className="col-span-2"><span className="font-semibold text-gray-600">Update Reason:</span> <span className="text-blue-800 ml-1">{event.update_reason}</span></div>
                                 )}
                             </div>
-                            {registrations.length > 0 && (
+                            {event.status === 'approved' && registrations.length > 0 && (
                                 <div>
                                     <h4 className="font-semibold text-gray-700 mb-2 text-base">Registered Participants:</h4>
                                     <div className="max-h-44 overflow-y-auto bg-white rounded-lg border p-3 space-y-1.5">

@@ -32,10 +32,8 @@ const EventCoordinators = () => {
                 })).filter(e => e.coordinators.length > 0);
 
                 setRows(result);
-                // expand all by default
-                const exp = {};
-                result.forEach(e => { exp[e.id] = true; });
-                setExpanded(exp);
+                // collapse all by default
+                setExpanded({});
             } catch (err) {
                 console.error(err);
             } finally {
@@ -70,9 +68,7 @@ const EventCoordinators = () => {
                         })).filter(e => e.coordinators.length > 0);
 
                         setRows(result);
-                        const exp = {};
-                        result.forEach(e => { exp[e.id] = true; });
-                        setExpanded(exp);
+                        setExpanded({});
                     } catch (err) {
                         console.error(err);
                     }

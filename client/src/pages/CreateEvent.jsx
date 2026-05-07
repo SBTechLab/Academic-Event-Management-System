@@ -16,11 +16,21 @@ const CreateEvent = () => {
         time: '',
         location: '',
         image_url: '',
-        event_type: 'technical'
+        event_type: 'technical',
+        eligible_years: ['1', '2', '3', '4']
     });
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleYearToggle = (year) => {
+        setFormData(prev => ({
+            ...prev,
+            eligible_years: prev.eligible_years.includes(year)
+                ? prev.eligible_years.filter(y => y !== year)
+                : [...prev.eligible_years, year]
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -97,6 +107,29 @@ const CreateEvent = () => {
                         <option value="competition">Competition</option>
                         <option value="general">General</option>
                     </select>
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                        Eligible Years
+                    </label>
+                    <div className="flex gap-3 flex-wrap">
+                        {['1', '2', '3', '4'].map(year => (
+                            <label key={year} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition ${
+                                formData.eligible_years.includes(year)
+                                    ? 'border-green-500 bg-green-50 text-green-700'
+                                    : 'border-gray-300 bg-white text-gray-600'
+                            }`}>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.eligible_years.includes(year)}
+                                    onChange={() => handleYearToggle(year)}
+                                    className="hidden"
+                                />
+                                <span className="font-semibold text-sm">Year {year}</span>
+                            </label>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="mb-4">

@@ -31,8 +31,9 @@ const Navbar = () => {
                 <div className="flex justify-between items-center">
 
                     {/* Logo */}
-                    <Link to="/" className="text-xl sm:text-2xl font-extrabold text-blue-600 tracking-tight hover:text-blue-700 transition-colors">
-                        UniEvents
+                    <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-extrabold text-sm" style={{ background: '#0061ff' }}>U</div>
+                        <span className="text-xl font-extrabold text-blue-600 tracking-tight">UniEvents</span>
                     </Link>
 
                     {/* Desktop Navigation */}

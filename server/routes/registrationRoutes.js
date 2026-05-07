@@ -31,7 +31,7 @@ router.put(
 // Used by FacultyDashboard (approve coordinator) and CoordinatorDashboard (mark attendance)
 router.put(
     '/:id/status',
-    authorizeRole(['admin', 'faculty', 'student_coordinator']),
+    authorizeRole(['admin', 'faculty', 'student_coordinator', 'student']),
     registrationController.updateRegistrationStatus
 );
 

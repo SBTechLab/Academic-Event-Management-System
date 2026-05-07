@@ -11,6 +11,11 @@ const Events = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);
+    const [search, setSearch] = useState('');
+    const [sort, setSort] = useState('none');
+    const [category, setCategory] = useState('all');
+
+    const CATEGORIES = ['all', 'technical', 'cultural', 'sports', 'workshop', 'seminar', 'competition', 'general'];
 
     const isEventCompleted = (eventDate, eventTime) => {
         return new Date(`${eventDate}T${eventTime}`) < new Date();
@@ -82,8 +87,16 @@ const Events = () => {
     if (loading) return <div className="flex items-center justify-center h-64 text-gray-500">Loading events...</div>;
     if (error) return <div className="flex items-center justify-center h-64 text-red-500">{error}</div>;
 
-    const totalPages = Math.ceil(events.length / PAGE_SIZE);
-    const pageEvents = events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const filtered = events
+        .filter(e => e.title.toLowerCase().includes(search.toLowerCase()))
+        .filter(e => category === 'all' || e.event_type === category)
+        .sort((a, b) =>
+            sort === 'asc' ? a.title.localeCompare(b.title) :
+            sort === 'desc' ? b.title.localeCompare(a.title) : 0
+        );
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const pageEvents = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const goToPage = (p) => {
         setPage(p);
@@ -94,11 +107,53 @@ const Events = () => {
         <div className="space-y-6">
             {/* Header */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h1 className="text-2xl font-bold text-gray-800">Browse Events</h1>
-                <p className="text-gray-500 text-sm mt-1">{events.length} events available</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Browse Events</h1>
+                        <p className="text-gray-500 text-sm mt-1">{filtered.length} events available</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        {/* Search Bar */}
+                        <div className="relative">
+                            <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+                                </svg>
+                            </span>
+                            <input
+                                type="text"
+                                placeholder="Search events..."
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                className="pl-9 pr-4 py-2.5 w-64 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:border-transparent transition"
+                                style={{ '--tw-ring-color': '#0061ff' }}
+                            />
+                        </div>
+
+                        {/* Sort Buttons */}
+                        <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+                            <span className="text-xs font-semibold text-gray-400 px-2 tracking-wide uppercase">Sort</span>
+                            {[{ val: 'none', label: 'Default' }, { val: 'asc', label: 'A → Z' }, { val: 'desc', label: 'Z → A' }].map(({ val, label }) => (
+                                <button
+                                    key={val}
+                                    onClick={() => setSort(val)}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                                        sort === val
+                                            ? 'text-white shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                                    }`}
+                                    style={sort === val ? { background: '#0061ff' } : {}}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {events.length === 0 ? (
+            {filtered.length === 0 ? (
                 <div className="bg-white rounded-xl border p-12 text-center">
                     <p className="text-gray-500">No events available at the moment.</p>
                 </div>

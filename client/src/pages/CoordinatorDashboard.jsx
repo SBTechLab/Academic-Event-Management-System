@@ -5,6 +5,49 @@ import { isEventCompleted } from '../eventUtils';
 
 const BLUE = '#0061ff';
 
+// ── Manage Registrations Tab ──
+const RegistrationsTab = ({ participants, onRefresh, getAuthHeaders, isCompleted }) => {
+    const all = participants.filter(p => p.role_type === 'participant');
+
+    const updateStatus = async (id, status) => {
+        await fetch(`http://localhost:5001/api/registrations/${id}/status`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ status })
+        });
+        onRefresh();
+    };
+
+    return (
+        <div className="space-y-3">
+            <h3 className="font-bold text-gray-800 text-base">Manage Registrations ({all.length})</h3>
+            {all.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No participants registered yet.</p>
+            ) : all.map(p => (
+                <div key={p.id} className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl">
+                    <div>
+                        <p className="font-semibold text-gray-900 text-sm">{p.user?.full_name}</p>
+                        <p className="text-xs text-gray-400">{p.user?.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                            p.status === 'attended' ? 'bg-green-100 text-green-700' :
+                            p.status === 'cancelled' ? 'bg-red-100 text-red-600' :
+                            'bg-blue-100 text-blue-700'
+                        }`}>{p.status}</span>
+                        {!isCompleted && p.status !== 'cancelled' && (
+                            <button onClick={() => updateStatus(p.id, 'cancelled')}
+                                className="text-xs text-red-500 hover:text-red-700 font-semibold border border-red-200 px-2 py-1 rounded-lg">
+                                Cancel
+                            </button>
+                        )}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const CoordinatorDashboard = () => {
     const { eventId } = useParams();
     const { getAuthHeaders } = useAuth();
@@ -14,8 +57,6 @@ const CoordinatorDashboard = () => {
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState(null);
-    const [attendanceMode, setAttendanceMode] = useState(null); // 'manual' | 'qr'
-    const [qrVisible, setQrVisible] = useState({});
 
     useEffect(() => { fetchCoordinatorData(); }, [eventId]);
 
@@ -60,6 +101,7 @@ const CoordinatorDashboard = () => {
                 if (perms.includes('view_participants')) setActiveTab('participants');
                 else if (perms.includes('mark_attendance')) setActiveTab('attendance');
                 else if (perms.includes('manage_event_details')) setActiveTab('details');
+                else if (perms.includes('manage_registrations')) setActiveTab('registrations');
             }
         } catch (err) {
             console.error(err);
@@ -87,12 +129,9 @@ const CoordinatorDashboard = () => {
                 body: JSON.stringify({ status: attended ? 'attended' : 'registered' })
             });
             if (res.ok) fetchCoordinatorData();
+            else console.error('Failed:', await res.json());
         } catch (err) { console.error(err); }
     };
-
-    // Simple QR: encode participant name + email as a data URL using a free API
-    const getQrUrl = (text) =>
-        `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(text)}`;
 
     if (loading) return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
     if (!event) return <div className="text-center py-10 text-red-500">Event not found</div>;
@@ -100,9 +139,10 @@ const CoordinatorDashboard = () => {
     const isCompleted = event && isEventCompleted(event.date, event.time);
 
     const tabs = [
-        has('view_participants')    && { key: 'participants', label: 'Participants' },
-        has('mark_attendance')      && { key: 'attendance',   label: 'Attendance' },
-        has('manage_event_details') && { key: 'details',      label: 'Event Details' },
+        has('view_participants')    && { key: 'participants',  label: 'Participants' },
+        has('mark_attendance')      && { key: 'attendance',    label: 'Attendance' },
+        has('manage_event_details') && { key: 'details',       label: 'Event Details' },
+        has('manage_registrations') && { key: 'registrations', label: 'Registrations' },
     ].filter(Boolean);
 
     const onlyParticipants = participants.filter(p => p.role_type === 'participant');
@@ -173,7 +213,7 @@ const CoordinatorDashboard = () => {
                     {/* Tab Bar */}
                     <div className="flex border-b border-gray-200">
                         {tabs.map(tab => (
-                            <button key={tab.key} onClick={() => { setActiveTab(tab.key); setAttendanceMode(null); }}
+                            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                                 className={`flex-1 py-4 text-sm font-semibold transition ${
                                     activeTab === tab.key
                                         ? 'border-b-2 bg-blue-50 text-blue-600'
@@ -217,107 +257,37 @@ const CoordinatorDashboard = () => {
                         {/* Attendance Tab */}
                         {activeTab === 'attendance' && has('mark_attendance') && (
                             <div>
-                                {/* Mode selector */}
-                                {!attendanceMode ? (
-                                    <div>
-                                        <h3 className="font-bold text-gray-800 text-base mb-6">How would you like to take attendance?</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <button onClick={() => setAttendanceMode('manual')}
-                                                className="flex flex-col items-center gap-3 p-8 border-2 rounded-2xl hover:shadow-md transition hover:border-blue-400 group">
-                                                <span className="text-4xl text-blue-600 font-bold leading-none">✓</span>
-                                                <p className="font-bold text-gray-800 text-lg group-hover:text-blue-600">Mark Attendance</p>
-                                                <p className="text-sm text-gray-400 text-center">Manually mark each participant as present or absent</p>
-                                            </button>
-                                            <button onClick={() => setAttendanceMode('qr')}
-                                                className="flex flex-col items-center gap-3 p-8 border-2 rounded-2xl hover:shadow-md transition hover:border-blue-400 group">
-                                                <span className="text-4xl text-blue-600 font-bold leading-none">QR</span>
-                                                <p className="font-bold text-gray-800 text-lg group-hover:text-blue-600">Generate QR Codes</p>
-                                                <p className="text-sm text-gray-400 text-center">Generate individual QR codes for each participant</p>
-                                            </button>
-                                        </div>
-                                    </div>
+                                <h3 className="font-bold text-gray-800 text-base mb-4">Mark Attendance ({onlyParticipants.length} participants)</h3>
+                                {onlyParticipants.length === 0 ? (
+                                    <p className="text-gray-400 text-center py-8">No participants registered yet</p>
                                 ) : (
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-5">
-                                            <button onClick={() => setAttendanceMode(null)}
-                                                className="text-sm font-semibold hover:opacity-70 transition"
-                                                style={{ color: BLUE }}>← Back</button>
-                                            <h3 className="font-bold text-gray-800 text-base">
-                                                {attendanceMode === 'manual' ? 'Mark Attendance' : 'QR Codes'}
-                                            </h3>
-                                        </div>
-
-                                        {onlyParticipants.length === 0 ? (
-                                            <p className="text-gray-400 text-center py-8">No participants registered yet</p>
-                                        ) : attendanceMode === 'manual' ? (
-                                            <div className="space-y-2">
-                                                {onlyParticipants.map(p => (
-                                                    <div key={p.id} className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl">
-                                                        <div>
-                                                            <p className="font-semibold text-gray-900 text-sm">{p.user?.full_name}</p>
-                                                            <p className="text-xs text-gray-400">{p.user?.email}</p>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => handleMarkAttendance(p.id, true)}
-                                                                disabled={p.status === 'attended' || isCompleted}
-                                                                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
-                                                                    p.status === 'attended' || isCompleted
-                                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                                        : 'bg-green-600 text-white hover:bg-green-700'
-                                                                }`}>
-                                                                {p.status === 'attended' ? 'Present' : 'Mark Present'}
-                                                            </button>
-                                                            {p.status === 'attended' && !isCompleted && (
-                                                                <button onClick={() => handleMarkAttendance(p.id, false)}
-                                                                    className="px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-300 transition">
-                                                                    Undo
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            // QR Mode
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {onlyParticipants.map(p => (
-                                                    <div key={p.id} className="border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3">
-                                                        <div className="text-center">
-                                                            <p className="font-semibold text-gray-900 text-sm">{p.user?.full_name}</p>
-                                                            <p className="text-xs text-gray-400">{p.user?.email}</p>
-                                                        </div>
-                                                        {qrVisible[p.id] ? (
-                                                            <>
-                                                                <img
-                                                                    src={getQrUrl(`${event.title}\n${p.user?.full_name}\n${p.user?.email}`)}
-                                                                    alt="QR Code"
-                                                                    className="w-40 h-40 rounded-lg border border-gray-200"
-                                                                />
-                                                                <button onClick={() => setQrVisible(prev => ({ ...prev, [p.id]: false }))}
-                                                                    className="text-xs text-gray-400 hover:text-gray-600">
-                                                                    Hide QR
-                                                                </button>
-                                                            </>
-                                                        ) : (
-                                                            <button onClick={() => setQrVisible(prev => ({ ...prev, [p.id]: true }))}
-                                                                disabled={isCompleted}
-                                                                className={`px-4 py-2 text-white text-sm font-semibold rounded-xl transition ${
-                                                                    isCompleted ? 'bg-gray-300 cursor-not-allowed' : 'hover:opacity-90'
-                                                                }`}
-                                                                style={isCompleted ? {} : { background: BLUE }}>
-                                                                Show QR Code
-                                                            </button>
-                                                        )}
-                                                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                                                            p.status === 'attended' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                                    <div className="space-y-2">
+                                        {onlyParticipants.map(p => (
+                                            <div key={p.id} className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl">
+                                                <div>
+                                                    <p className="font-semibold text-gray-900 text-sm">{p.user?.full_name}</p>
+                                                    <p className="text-xs text-gray-400">{p.user?.email}</p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleMarkAttendance(p.id, true)}
+                                                        disabled={p.status === 'attended' || isCompleted}
+                                                        className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+                                                            p.status === 'attended' || isCompleted
+                                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                                : 'bg-green-600 text-white hover:bg-green-700'
                                                         }`}>
-                                                            {p.status === 'attended' ? 'Attended' : 'Not yet attended'}
-                                                        </span>
-                                                    </div>
-                                                ))}
+                                                        {p.status === 'attended' ? 'Present ✓' : 'Mark Present'}
+                                                    </button>
+                                                    {p.status === 'attended' && !isCompleted && (
+                                                        <button onClick={() => handleMarkAttendance(p.id, false)}
+                                                            className="px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-300 transition">
+                                                            Undo
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
+                                        ))}
                                     </div>
                                 )}
                             </div>
@@ -341,6 +311,21 @@ const CoordinatorDashboard = () => {
                                     </div>
                                 ))}
                             </div>
+                        )}
+
+                        {/* Announcements Tab */}
+                        {activeTab === 'announcements' && has('send_announcements') && (
+                            <AnnouncementsTab eventId={eventId} getAuthHeaders={getAuthHeaders} participants={onlyParticipants} />
+                        )}
+
+                        {/* Reports Tab */}
+                        {activeTab === 'reports' && has('generate_reports') && (
+                            <ReportsTab event={event} participants={onlyParticipants} attendedCount={attendedCount} />
+                        )}
+
+                        {/* Manage Registrations Tab */}
+                        {activeTab === 'registrations' && has('manage_registrations') && (
+                            <RegistrationsTab participants={participants} onRefresh={fetchCoordinatorData} getAuthHeaders={getAuthHeaders} isCompleted={isCompleted} />
                         )}
                     </div>
                 </div>

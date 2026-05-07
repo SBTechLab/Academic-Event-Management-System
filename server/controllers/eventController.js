@@ -1,5 +1,5 @@
 const supabase = require('../config/supabase');
-const { sendEventCreatedEmail, sendEventStatusEmail, sendNewEventToAdmin, getAdminEmails } = require('../config/emailService');
+const { sendEventCreatedEmail, sendEventStatusEmail, sendNewEventToAdmin, getAdminEmails, sendNewEventToStudents } = require('../config/emailService');
 
 // Get all events
 const getEvents = async (req, res) => {
@@ -8,7 +8,7 @@ const getEvents = async (req, res) => {
         
         const { data: events, error } = await supabase
             .from('events')
-            .select('id, title, description, date, time, location, status, event_type, image_url, created_at, created_by')
+            .select('id, title, description, date, time, location, status, event_type, image_url, eligible_years, created_at, created_by, creator:users!created_by(full_name)')
             .order('date', { ascending: true })
             .limit(parseInt(limit));
 
@@ -51,7 +51,7 @@ const getEventById = async (req, res) => {
 
 // Create event
 const createEvent = async (req, res) => {
-    const { title, description, date, time, location, coordinator_id, image_url, event_type } = req.body;
+    const { title, description, date, time, location, coordinator_id, image_url, event_type, eligible_years } = req.body;
 
     try {
         const { data, error } = await supabase
@@ -66,6 +66,7 @@ const createEvent = async (req, res) => {
                     coordinator_id,
                     image_url,
                     event_type: event_type || 'general',
+                    eligible_years: eligible_years || ['1', '2', '3', '4'],
                     created_by: req.user.id,
                     status: 'pending'
                 }
@@ -170,6 +171,52 @@ const updateEvent = async (req, res) => {
                 }
             } catch (emailErr) {
                 console.error('Email error:', emailErr);
+            }
+
+            // Notify all students when event is approved
+            if (updates.status === 'approved') {
+                try {
+                    const { data: roleData } = await supabase
+                        .from('roles')
+                        .select('id')
+                        .eq('name', 'student')
+                        .single();
+
+                    const { data: coordRoleData } = await supabase
+                        .from('roles')
+                        .select('id')
+                        .eq('name', 'student_coordinator')
+                        .single();
+
+                    const roleIds = [roleData?.id, coordRoleData?.id].filter(Boolean);
+
+                    const { data: students } = await supabase
+                        .from('users')
+                        .select('email, full_name')
+                        .in('role_id', roleIds);
+
+                    if (students && students.length > 0) {
+                        const eventDetails = await supabase
+                            .from('events')
+                            .select('date, time, location, event_type')
+                            .eq('id', id)
+                            .single();
+
+                        for (const student of students) {
+                            await sendNewEventToStudents(
+                                student.email,
+                                student.full_name,
+                                oldEvent.title,
+                                eventDetails.data?.date,
+                                eventDetails.data?.time,
+                                eventDetails.data?.location,
+                                eventDetails.data?.event_type
+                            ).catch(err => console.error('Student email error:', err));
+                        }
+                    }
+                } catch (emailErr) {
+                    console.error('Student notification error:', emailErr);
+                }
             }
         }
 

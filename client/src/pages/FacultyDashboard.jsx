@@ -453,32 +453,6 @@ const FacultyDashboard = () => {
                                 <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
                                     <input
                                         type="checkbox"
-                                        checked={selectedPermissions.includes('send_announcements')}
-                                        onChange={() => togglePermission('send_announcements')}
-                                        className="mt-1 mr-3"
-                                    />
-                                    <div>
-                                        <div className="font-medium text-gray-900">Send Announcements</div>
-                                        <div className="text-sm text-gray-600">Send notifications to participants</div>
-                                    </div>
-                                </label>
-
-                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedPermissions.includes('generate_reports')}
-                                        onChange={() => togglePermission('generate_reports')}
-                                        className="mt-1 mr-3"
-                                    />
-                                    <div>
-                                        <div className="font-medium text-gray-900">Generate Reports</div>
-                                        <div className="text-sm text-gray-600">Generate attendance and participation reports</div>
-                                    </div>
-                                </label>
-
-                                <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                                    <input
-                                        type="checkbox"
                                         checked={selectedPermissions.includes('manage_registrations')}
                                         onChange={() => togglePermission('manage_registrations')}
                                         className="mt-1 mr-3"

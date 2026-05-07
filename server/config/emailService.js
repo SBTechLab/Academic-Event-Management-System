@@ -840,6 +840,70 @@ const sendCoordinatorRoleApprovedEmail = async (studentEmail, studentName) => {
     });
 };
 
+// Notify all students about a newly approved event
+const sendNewEventToStudents = async (studentEmail, studentName, eventTitle, eventDate, eventTime, eventLocation, eventType) => {
+    const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'TBA';
+    const cfg = { color: '#34d399', gradient: 'linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #059669 100%)' };
+
+    await transporter.sendMail({
+        from: `"UniEvents" <${process.env.EMAIL_USER}>`,
+        to: studentEmail,
+        subject: `🎉 New Event Available: ${eventTitle}`,
+        html: `
+            <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:620px;margin:0 auto;background:#0f172a;border-radius:20px;overflow:hidden;">
+                <div style="background:${cfg.gradient};padding:30px 32px 24px;text-align:center;">
+                    <div style="width:60px;height:60px;margin:0 auto 14px;background:rgba(255,255,255,0.1);border-radius:50%;border:2px solid rgba(255,255,255,0.15);">
+                        <span style="font-size:28px;line-height:60px;">🎉</span>
+                    </div>
+                    <h1 style="color:#fff;margin:0;font-size:22px;font-weight:800;">New Event Available!</h1>
+                    <p style="color:rgba(255,255,255,0.6);margin:6px 0 0;font-size:13px;">A new event has been approved and is open for registration</p>
+                    <div style="margin-top:16px;">
+                        <span style="background:rgba(34,197,94,0.15);color:#4ade80;padding:6px 20px;border-radius:30px;font-size:12px;font-weight:600;border:1px solid rgba(34,197,94,0.3);">✅ NOW OPEN</span>
+                    </div>
+                </div>
+                <div style="padding:24px 32px 0;">
+                    <p style="color:#e2e8f0;font-size:15px;margin:0;">Hello <strong style="color:${cfg.color};">${studentName}</strong> 🎓</p>
+                    <p style="color:#94a3b8;font-size:13px;margin:8px 0 0;line-height:1.6;">A new event has just been approved and is now available for registration on UniEvents.</p>
+                </div>
+                <div style="padding:20px 32px;">
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px 20px;margin-bottom:10px;">
+                        <div style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;">Event Title</div>
+                        <div style="color:#f1f5f9;font-size:17px;font-weight:700;">${eventTitle}</div>
+                    </div>
+                    <div style="background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.15);border-radius:12px;padding:20px;">
+                        <div style="margin-bottom:12px;">
+                            <span style="display:block;color:${cfg.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">📅 Date</span>
+                            <span style="color:#e2e8f0;font-size:14px;">${formattedDate}</span>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <span style="display:block;color:${cfg.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">⏰ Time</span>
+                            <span style="color:#e2e8f0;font-size:14px;">${eventTime || 'TBA'}</span>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <span style="display:block;color:${cfg.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">📍 Location</span>
+                            <span style="color:#e2e8f0;font-size:14px;">${eventLocation || 'TBA'}</span>
+                        </div>
+                        <div>
+                            <span style="display:block;color:${cfg.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">🏷️ Type</span>
+                            <span style="color:#e2e8f0;font-size:14px;text-transform:capitalize;">${eventType || 'General'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding:0 32px 24px;">
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;">
+                        <div style="color:#e2e8f0;font-size:14px;font-weight:700;margin-bottom:8px;">👉 What to do next?</div>
+                        <div style="color:#94a3b8;font-size:13px;line-height:1.6;">Log in to UniEvents and go to your dashboard to register for this event. You can register as a Participant or apply to be an Event Coordinator.</div>
+                    </div>
+                </div>
+                <div style="padding:16px 32px 28px;text-align:center;border-top:1px solid rgba(255,255,255,0.06);">
+                    <p style="color:#475569;font-size:18px;margin:0 0 4px;font-weight:800;"><span style="color:#34d399;">Uni</span><span style="color:#e2e8f0;">Events</span></p>
+                    <p style="color:#475569;font-size:11px;margin:0;">Academic Event Management System</p>
+                </div>
+            </div>
+        `
+    });
+};
+
 // Send password reset email
 const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
     await transporter.sendMail({
@@ -908,6 +972,7 @@ const getAdminEmails = async (supabase) => {
 module.exports = {
     sendEmail,
     sendPasswordResetEmail,
+    sendNewEventToStudents,
     sendEventCreatedEmail,
     sendEventStatusEmail,
     sendCoordinatorApprovedEmail,

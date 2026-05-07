@@ -25,8 +25,20 @@ const StudentDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [selectedType, setSelectedType] = useState('all');
     const [page, setPage] = useState(1);
+    const [search, setSearch] = useState('');
 
     const isCompleted = (date, time) => new Date(`${date}T${time}`) < new Date();
+
+    // Filter events by student year
+    const filterByYear = (events) => {
+        const studentYear = user?.year;
+        return events.filter(e => {
+            if (e.status !== 'approved') return false;
+            if (!studentYear) return true;
+            if (!e.eligible_years || e.eligible_years.length === 0) return true;
+            return e.eligible_years.includes(studentYear);
+        });
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,7 +47,7 @@ const StudentDashboard = () => {
                     fetchWithCache('http://localhost:5001/api/events?limit=50'),
                     fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
                 ]);
-                setAllEvents(eventsData.filter(e => e.status === 'approved'));
+                setAllEvents(filterByYear(eventsData));
                 setRegistrations(Array.isArray(regData) ? regData : []);
             } catch (err) {
                 console.error(err);
@@ -46,7 +58,6 @@ const StudentDashboard = () => {
         fetchData();
     }, []);
 
-    // Refresh when page becomes visible (tab focus)
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
@@ -56,7 +67,7 @@ const StudentDashboard = () => {
                             fetchWithCache('http://localhost:5001/api/events?limit=50'),
                             fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
                         ]);
-                        setAllEvents(eventsData.filter(e => e.status === 'approved'));
+                        setAllEvents(filterByYear(eventsData));
                         setRegistrations(Array.isArray(regData) ? regData : []);
                     } catch (err) {
                         console.error(err);
@@ -65,12 +76,10 @@ const StudentDashboard = () => {
                 fetchData();
             }
         };
-
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, []);
 
-    // Refresh every 10 seconds for real-time updates
     useEffect(() => {
         const interval = setInterval(async () => {
             try {
@@ -78,7 +87,7 @@ const StudentDashboard = () => {
                     fetchWithCache('http://localhost:5001/api/events?limit=50'),
                     fetch('http://localhost:5001/api/registrations/my-registrations', { headers: getAuthHeaders() }).then(r => r.json())
                 ]);
-                setAllEvents(eventsData.filter(e => e.status === 'approved'));
+                setAllEvents(filterByYear(eventsData));
                 setRegistrations(Array.isArray(regData) ? regData : []);
             } catch (err) {
                 console.error('Failed to refresh dashboard:', err);
@@ -89,18 +98,22 @@ const StudentDashboard = () => {
 
     if (loading) return <div className="flex justify-center items-center h-64 text-gray-500">Loading...</div>;
 
-    const filtered = selectedType === 'all' ? allEvents : allEvents.filter(e => e.event_type === selectedType);
+    const filtered = (selectedType === 'all' ? allEvents : allEvents.filter(e => e.event_type === selectedType))
+        .filter(e => e.title.toLowerCase().includes(search.toLowerCase()));
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
     const pageEvents = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-    const handleTypeChange = (type) => { setSelectedType(type); setPage(1); };
+    const handleTypeChange = (type) => { setSelectedType(type); setPage(1); setSearch(''); };
 
     return (
         <div className="dashboard-shell">
             {/* Welcome */}
             <div className="dashboard-card p-7">
                 <h1 className="dashboard-title text-3xl">Welcome back, {user?.full_name}</h1>
-                <p className="dashboard-subtitle mt-2">Here's what's happening with events today.</p>
+
+                {user?.year && (
+                    <p className="text-xs text-blue-500 font-semibold mt-1">Showing events for Year {user.year} students</p>
+                )}
                 <Link to="/my-events" className="inline-block mt-3 text-sm font-semibold" style={{ color: '#0061ff' }}>
                     View My Registrations →
                 </Link>
@@ -139,28 +152,33 @@ const StudentDashboard = () => {
 
             {/* Events Grid */}
             <div className="dashboard-card p-6">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">
                         {selectedType === 'all' ? 'All Events' : `${eventTypes.find(t => t.value === selectedType)?.label} Events`}
                     </h2>
-                    <span className="text-sm text-gray-400">
-                        {filtered.length} events · Page {page} of {totalPages || 1}
-                    </span>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
+                            placeholder="Search events..."
+                            className="w-full sm:w-52 px-4 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <span className="text-sm text-gray-400 whitespace-nowrap">{filtered.length} events · Page {page} of {totalPages || 1}</span>
+                    </div>
                 </div>
 
                 {filtered.length === 0 ? (
-                    <p className="text-gray-400 text-center py-10">No events in this category.</p>
+                    <p className="text-gray-400 text-center py-10">No events found.</p>
                 ) : (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {pageEvents.map(event => (
                                 <div key={event.id} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition flex flex-col">
                                     {event.image_url ? (
-                                        <img src={event.image_url} alt={event.title}
-                                            className="w-full h-36 object-cover" loading="lazy" />
+                                        <img src={event.image_url} alt={event.title} className="w-full h-36 object-cover" loading="lazy" />
                                     ) : (
-                                        <div className="w-full h-36 flex items-center justify-center text-5xl"
-                                            style={{ background: '#eff6ff' }}>
+                                        <div className="w-full h-36 flex items-center justify-center text-5xl" style={{ background: '#eff6ff' }}>
                                             {typeIcon(event.event_type)}
                                         </div>
                                     )}
@@ -177,6 +195,11 @@ const StudentDashboard = () => {
                                         <div className="text-sm text-gray-600 space-y-1 mb-4">
                                             <div>Date/Time: {event.date} &nbsp; {event.time}</div>
                                             <div>Location: {event.location}</div>
+                                            {event.eligible_years && event.eligible_years.length < 4 && (
+                                                <div className="text-xs text-blue-500 font-medium">
+                                                    For Year: {event.eligible_years.join(', ')}
+                                                </div>
+                                            )}
                                         </div>
                                         <Link to={`/events/${event.id}`}
                                             style={{ background: '#0061ff' }}
@@ -190,7 +213,7 @@ const StudentDashboard = () => {
 
                         {totalPages > 1 && (
                             <div className="flex items-center justify-center gap-2 mt-6">
-                                <button onClick={() => { setPage(p => p - 1); }} disabled={page === 1}
+                                <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
                                     className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
                                     ← Prev
                                 </button>
@@ -203,7 +226,7 @@ const StudentDashboard = () => {
                                         {p}
                                     </button>
                                 ))}
-                                <button onClick={() => { setPage(p => p + 1); }} disabled={page === totalPages}
+                                <button onClick={() => setPage(p => p + 1)} disabled={page === totalPages}
                                     className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
                                     Next →
                                 </button>

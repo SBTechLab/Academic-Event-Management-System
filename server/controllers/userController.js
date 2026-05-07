@@ -43,6 +43,7 @@ const loginUser = async (req, res) => {
                     email: user.email,
                     full_name: user.full_name,
                     role: role,
+                    year: user.year || null,
                 },
                 token: generateToken(user.id, role),
             });
@@ -68,6 +69,20 @@ const registerUser = async (req, res) => {
             assignedRole = 'student';
         }
 
+        // Auto-detect year from email prefix (e.g. 24ce140 -> year 2, 23ce140 -> year 3)
+        let studentYear = null;
+        if (assignedRole === 'student') {
+            const match = email.match(/^(\d{2})/);
+            if (match) {
+                const prefix = parseInt(match[1]);
+                const currentYear = new Date().getFullYear() % 100; // e.g. 25
+                const diff = currentYear - prefix;
+                if (diff >= 0 && diff <= 3) {
+                    studentYear = String(diff + 1); // diff=0 -> year 1, diff=1 -> year 2, etc.
+                }
+            }
+        }
+
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -86,7 +101,8 @@ const registerUser = async (req, res) => {
                 email,
                 full_name,
                 role_id: roleData?.id,
-                password: hashedPassword
+                password: hashedPassword,
+                year: studentYear
             })
             .select()
             .single();
@@ -101,6 +117,7 @@ const registerUser = async (req, res) => {
                 email: userData.email,
                 full_name: userData.full_name,
                 role: assignedRole,
+                year: studentYear,
             },
             token: generateToken(userData.id, assignedRole),
         });
