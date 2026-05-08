@@ -25,6 +25,8 @@ create table public.users (
   avatar_url text,
   password text,
   year text check (year in ('1', '2', '3', '4')),
+  reset_token text,
+  reset_token_expires timestamptz,
   created_at timestamptz default now()
 );
 
